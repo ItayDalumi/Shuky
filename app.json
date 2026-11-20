@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "שוקי",
+    "slug": "shuky",
+    "scheme": "shuky",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#FFF8EE",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.shuky.app"
+    },
+    "android": {
+      "package": "com.shuky.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF8EE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "lang": "he",
+      "name": "שוקי",
+      "shortName": "שוקי",
+      "description": "מה שגדל ונאפה בשכונה שלך",
+      "themeColor": "#E85D3F",
+      "backgroundColor": "#FFF8EE"
+    },
+    "extra": {
+      "supportsRTL": true,
+      "forcesRTL": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFF8EE"
+        }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportsRTL": true,
+          "forcesRTL": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "כדי להעלות תמונה של המוצר שלך",
+          "cameraPermission": "כדי לצלם את המוצר שלך"
+        }
+      ]
+    ]
+  }
+}
