@@ -5,11 +5,11 @@
 export const XP_PER_TRADE = 20;
 
 export const LEVELS = [
-  { level: 1, minXp: 0, title: 'שכן חדש' },
-  { level: 2, minXp: 100, title: 'שכן מתחיל' },
-  { level: 3, minXp: 250, title: 'שכן טוב' },
-  { level: 4, minXp: 500, title: 'שכן מצוין' },
-  { level: 5, minXp: 900, title: 'לב השכונה' },
+  { level: 1, minXp: 0, title: 'בצק טרי' },
+  { level: 2, minXp: 100, title: 'תופח יפה' },
+  { level: 3, minXp: 250, title: 'יוצא מהתנור' },
+  { level: 4, minXp: 500, title: 'זהוב ופריך' },
+  { level: 5, minXp: 900, title: 'כוכב המאפייה' },
 ] as const;
 
 export type LevelInfo = {

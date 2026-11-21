@@ -19,7 +19,7 @@ export default function TradeCompletedScreen() {
 
   const listing = id ? getListing(id) : undefined;
   const seller = listing ? getSeller(listing.sellerId) : undefined;
-  const firstName = seller?.name.split(' ')[0] ?? 'לשכנים';
+  const firstName = seller?.name.split(' ')[0];
 
   // Static preview of the XP gain (no persistence in Phase 1).
   const before = getLevelInfo(user.xp);
@@ -42,7 +42,7 @@ export default function TradeCompletedScreen() {
             העסקה הושלמה!
           </AppText>
           <AppText variant="body" color={colors.muted} center>
-            {`כל הכבוד – עזרת ל${firstName}, ושום דבר לא נזרק לפח.`}
+            {firstName ? `בתיאבון! תודה שקנית מ${firstName}, אופה מהשכונה.` : 'בתיאבון! תודה שקנית מאופה מהשכונה.'}
           </AppText>
         </View>
 

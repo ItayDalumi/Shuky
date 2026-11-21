@@ -1,5 +1,10 @@
-export type Category = 'vegetables' | 'fruits' | 'eggs' | 'baked';
-export type DealType = 'sale' | 'trade' | 'free';
+/** Shuky sells home-baked goods only. */
+export type Category = 'cakes' | 'cookies' | 'pastries' | 'breads' | 'desserts';
+
+/** Ready now (already baked) or baked to order (pre-order). */
+export type Availability = 'ready' | 'preorder';
+
+export type DietaryTag = 'kosher' | 'parve' | 'glutenFree' | 'vegan' | 'nutFree';
 
 export type Seller = {
   id: string;
@@ -17,15 +22,18 @@ export type Listing = {
   id: string;
   title: string;
   category: Category;
-  dealType: DealType;
-  /** ILS, only for dealType === 'sale' */
-  price?: number;
+  /** ILS. Every listing is for sale. */
+  price: number;
   /** e.g. "קופסה של 12" */
   unit?: string;
   /** May be empty */
   description: string;
-  /** ISO date the item was baked / picked / collected */
-  freshAt: string;
+  availability: Availability;
+  /** ready: ISO date it was baked */
+  bakedAt?: string;
+  /** preorder: minimum days of notice the baker needs */
+  noticeDays?: number;
+  dietary: DietaryTag[];
   sellerId: string;
   /** Local or remote photo. Phase 1 falls back to a category illustration. */
   photoUri?: string;

@@ -1,8 +1,9 @@
 # Shuky · שוקי
 
-**מה שגדל ונאפה בשכונה שלך** – a hyperlocal app where neighbors buy, sell, barter or give away
-home-grown produce (vegetables, fruit, eggs) and home-made baked goods. Launch community: Lehavim.
-The whole UI is Hebrew, right-to-left.
+**מה שנאפה בשכונה שלך** – a hyperlocal marketplace for home-baked goods. Neighbors who bake at home
+(cakes, cookies, pastries, breads, desserts) sell to neighbors who want to buy, with seller ratings and
+levels front and center. Items are either ready now or baked to order (pre-order). Launch community:
+Lehavim. The app is mobile-first (iOS / Android), and the whole UI is Hebrew, right-to-left.
 
 > **Status: Phase 1.** UI scaffold with static mock data. No backend yet.
 
@@ -90,9 +91,19 @@ select trigger), `ProductCard`, `BottomNav`, plus `AppText`, `IconButton`, `Pill
 
 Icons are [Lucide](https://lucide.dev) (`lucide-react-native`), the same line style as the Figma icons.
 
+### Product model
+
+- **Sales only.** Every listing has a price (no barter or giveaways).
+- **Categories:** עוגות, עוגיות, מאפים, לחם וחלות, קינוחים (`src/data/categories.ts`).
+- **Availability:** `ready` (baked on a given day) or `preorder` (baked to order, with a minimum notice:
+  a day, two days, three days or a week).
+- **Diet and kashrut tags:** כשר, פרווה, ללא גלוטן, טבעוני, ללא אגוזים.
+- **Trust:** seller rating and level are shown on every card and on the product page.
+
 ### MVP rules and where they live
 
-- **No in-app chat.** Contact goes through a WhatsApp deep link (`src/lib/whatsapp.ts`, `wa.me`).
+- **No in-app chat or payments.** Ordering goes through a WhatsApp deep link with a prefilled message
+  (`src/lib/whatsapp.ts`, `wa.me`), and payment happens between the neighbors.
 - **Distances are always rounded**, never an exact location: `formatDistance()` in `src/lib/format.ts`
   (nearest 50 m, or km with one decimal).
 - **XP is awarded only when both sides confirm a trade.** `src/lib/levels.ts` holds the level ladder
@@ -101,7 +112,8 @@ Icons are [Lucide](https://lucide.dev) (`lucide-react-native`), the same line st
 
 ## Roadmap
 
-- **Phase 2:** Supabase schema (`profiles`, `listings`, `trades`, `ratings`) with RLS, phone OTP auth,
+- **Phase 2:** Supabase schema (`profiles`, `listings` with availability / notice days / diet tags,
+  `trades`, `ratings`) with RLS, phone OTP auth,
   photo upload to Storage, a PostGIS distance query that returns rounded distances only, and
   `expo-location` on the location screen.
 - **Phase 3:** XP and level logic (both-sides confirmation), ratings, persisted saved items.
