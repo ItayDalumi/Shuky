@@ -2,13 +2,12 @@ import { StyleSheet, View } from 'react-native';
 import { MapPin, Star } from 'lucide-react-native';
 
 import type { Seller } from '@/data/types';
-import { formatDistance } from '@/lib/format';
+import { formatDistance, formatRating } from '@/lib/format';
 import { border, colors, radius, spacing } from '@/theme';
 import { AppText } from './AppText';
 
 /** Seller summary on the product page: avatar, name, level, rating, rounded distance. */
-export function SellerCard({ seller }: { seller: Seller }) {
-  const isMine = seller.id === 'me';
+export function SellerCard({ seller, isMine }: { seller: Seller; isMine?: boolean }) {
   return (
     <View style={styles.card}>
       <View style={styles.avatar}>
@@ -24,12 +23,12 @@ export function SellerCard({ seller }: { seller: Seller }) {
         <View style={styles.ratingRow}>
           <Star size={14} color={colors.honey} fill={colors.honey} />
           <AppText variant="caption" color={colors.muted} numberOfLines={1}>
-            {`רמה ${seller.level} · ${seller.trades} עסקאות · ${seller.rating.toFixed(1)}`}
+            {`רמה ${seller.level} · ${seller.trades} עסקאות · ${formatRating(seller.rating)}`}
           </AppText>
         </View>
       </View>
 
-      {!isMine ? (
+      {!isMine && seller.distanceMeters !== null ? (
         <View style={styles.distance} accessibilityLabel={`בערך ${formatDistance(seller.distanceMeters)} ממך`}>
           <MapPin size={18} color={colors.leaf} strokeWidth={2} />
           <AppText variant="caption" color={colors.muted}>

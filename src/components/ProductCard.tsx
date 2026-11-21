@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { CalendarClock, Clock, MapPin, Star } from 'lucide-react-native';
 
 import type { Listing, Seller } from '@/data/types';
-import { daysAgo, formatDistanceFromMe, formatPrice, relativeDay } from '@/lib/format';
+import { daysAgo, formatDistanceOrNearby, formatPrice, formatRating, relativeDay } from '@/lib/format';
 import { border, colors, radius, spacing } from '@/theme';
 import { AppText } from './AppText';
 import { CategoryArt } from './CategoryArt';
@@ -11,12 +11,13 @@ import { Pill } from './Pill';
 export type ProductCardProps = {
   listing: Listing;
   seller?: Seller;
+  /** The signed-in user's own listing */
+  isMine?: boolean;
   onPress?: () => void;
 };
 
 /** Feed card: image + availability, title, rounded distance, price, seller rating and level. */
-export function ProductCard({ listing, seller, onPress }: ProductCardProps) {
-  const isMine = seller?.id === 'me';
+export function ProductCard({ listing, seller, isMine, onPress }: ProductCardProps) {
   const preorder = listing.availability === 'preorder';
 
   return (
@@ -44,7 +45,7 @@ export function ProductCard({ listing, seller, onPress }: ProductCardProps) {
       <View style={styles.row}>
         <MapPin size={14} color={colors.leaf} strokeWidth={2} />
         <AppText variant="caption" color={colors.muted} numberOfLines={1}>
-          {isMine ? 'המוצר שלך' : seller ? formatDistanceFromMe(seller.distanceMeters) : ''}
+          {isMine ? 'המוצר שלך' : seller ? formatDistanceOrNearby(seller.distanceMeters, true) : ''}
         </AppText>
       </View>
 
@@ -54,10 +55,10 @@ export function ProductCard({ listing, seller, onPress }: ProductCardProps) {
         </AppText>
         {seller ? (
           <View style={styles.sellerMeta}>
-            <View style={styles.row} accessibilityLabel={`דירוג ${seller.rating.toFixed(1)}`}>
-              <Star size={12} color={colors.honey} fill={colors.honey} />
+            <View style={styles.row} accessibilityLabel={`דירוג ${formatRating(seller.rating)}`}>
+              {seller.rating !== null ? <Star size={12} color={colors.honey} fill={colors.honey} /> : null}
               <AppText variant="captionMedium" color={colors.ink}>
-                {seller.rating.toFixed(1)}
+                {formatRating(seller.rating)}
               </AppText>
             </View>
             <Pill size="sm" tone="leaf" label={`רמה ${seller.level}`} />

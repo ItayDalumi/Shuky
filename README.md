@@ -5,7 +5,8 @@
 levels front and center. Items are either ready now or baked to order (pre-order). Launch community:
 Lehavim. The app is mobile-first (iOS / Android), and the whole UI is Hebrew, right-to-left.
 
-> **Status: Phase 1.** UI scaffold with static mock data. No backend yet.
+> **Status: Phase 2.** Supabase backend: phone sign-in, profiles, location (rounded), listings
+> with photos. Without a `.env` the app runs in **demo mode** on mock data.
 
 ![The 9 Phase 1 screens](docs/phase-1-screens.png)
 
@@ -27,8 +28,27 @@ npm start            # Expo dev server for iOS / Android (Expo Go or a dev build
 | `npm run lint` | `expo lint` (ESLint, `eslint-config-expo`) |
 | `npm run build:web` | Static web export to `dist/` |
 
-Environment variables: copy `.env.example` to `.env`. Phase 1 doesn't read any; the Supabase keys
-are placeholders for Phase 2. Never commit real keys.
+### Demo mode vs live mode
+
+- **Demo** (no `.env`): everything runs in memory on `src/data/mock.ts`. Any phone number and any
+  4-digit code work. Good for design work and quick previews in Expo Go.
+- **Live** (`.env` with your Supabase project): real SMS sign-in (6-digit code), profiles, rounded
+  distances and listings with photos, all from Supabase.
+
+## Supabase setup (live mode)
+
+1. Create a project at [supabase.com](https://supabase.com) (region: Frankfurt is closest to Israel).
+2. **SQL Editor** → paste `supabase/migrations/20261121120000_init.sql` → **Run**. This creates the
+   tables, the security rules (RLS), the feed / trade / delete-account functions and the
+   `listing-photos` storage bucket.
+3. **Authentication → Sign In / Providers → Phone**: enable it and connect an SMS provider (e.g.
+   Twilio). For development you can add test numbers with a fixed code there, so no real SMS is sent.
+4. **Project Settings → API**: copy the Project URL and the anon / publishable key into a `.env` file
+   (see `.env.example`). Never use the `service_role` / secret key in the app.
+5. Restart with a clean cache: `npx expo start --clear`.
+
+The database tests in `supabase/tests` check the security rules against a local Postgres + PostGIS
+(see `supabase/tests/run.sh`).
 
 ### RTL
 
@@ -47,20 +67,25 @@ are placeholders for Phase 2. Never commit real keys.
 src/
   app/                      Expo Router routes (every file is a screen)
     _layout.tsx             Root: fonts (Rubik), RTL, providers, stack
-    index.tsx               Redirects to /welcome
-    (onboarding)/           01 welcome · 02 phone · 03 otp · 04 location
-    (tabs)/                 Bottom tabs: home (05) · search · saved · profile (08)
-      _layout.tsx           Tabs navigator rendered with our BottomNav
-    product/[id].tsx        06 product page
-    listing/new.tsx         07 add listing (modal)
-    trade/[id].tsx          09 trade completed
-    notifications.tsx       Notifications list
-    settings.tsx            Settings
+    index.tsx               Start: resumes the session, or goes to /welcome
+    (onboarding)/           01 welcome · 02 phone · 03 otp · name (new users) · 04 location
+    (app)/                  Signed-in area (its _layout redirects to /welcome when signed out)
+      (tabs)/               Bottom tabs: home (05) · search · saved · profile (08)
+      product/[id].tsx      06 product page
+      listing/new.tsx       07 add listing (modal)
+      trade/[id].tsx        09 trade completed
+      notifications.tsx     Notifications list
+      settings.tsx          Settings
   components/               Design-system components (see below)
   theme/tokens.ts           Colors, radii, spacing, fonts, type scale
   data/                     Types, category config, mock data
-  store/AppStore.tsx        In-memory store (listings, saved items) for Phase 1
-  lib/                      format (distance/price/dates), whatsapp, levels/XP, rtl, navigation
+  store/AppStore.tsx        App state: live (Supabase) or demo (mock) mode
+  lib/supabase.ts           Supabase client (session kept in AsyncStorage)
+  lib/api.ts                Live-mode calls: auth, profile, location, feed, listings, delete account
+  lib/                      Also: format, whatsapp, levels/XP, rtl, navigation, confirm
+supabase/
+  migrations/               Database schema, RLS, functions, storage bucket
+  tests/                    Security tests for the schema (local Postgres + PostGIS)
 public/index.html           Web shell (RTL, cream background)
 docs/                       Screenshots
 ```
@@ -72,6 +97,7 @@ docs/                       Screenshots
 | `/welcome` | 01 · פתיחה |
 | `/phone` | 02 · התחברות |
 | `/otp` | 03 · קוד אימות |
+| `/name` | Name for new users (after the code) |
 | `/location` | 04 · מיקום |
 | `/home` | 05 · בית (פיד) |
 | `/product/:id` | 06 · עמוד מוצר |
@@ -108,16 +134,17 @@ Icons are [Lucide](https://lucide.dev) (`lucide-react-native`), the same line st
 
 - **No in-app chat or payments.** Ordering goes through a WhatsApp deep link with a prefilled message
   (`src/lib/whatsapp.ts`, `wa.me`), and payment happens between the neighbors.
-- **Distances are always rounded**, never an exact location: `formatDistance()` in `src/lib/format.ts`
-  (nearest 50 m, or km with one decimal).
-- **XP is awarded only when both sides confirm a trade.** `src/lib/levels.ts` holds the level ladder
-  and `XP_PER_TRADE`. The trade-completed screen is a static preview in Phase 1, and the rule is
-  enforced server-side in Phase 3.
+- **Distances are always rounded**, never an exact location. The phone rounds the position, the
+  database snaps it to a ~100 m grid, no user can read another user's point, and the feed
+  (`nearby_listings()`) returns only a distance rounded to 50 m. The app shows "350 מ׳ ממך".
+- **XP is awarded only when both sides confirm a trade.** Enforced in the database by
+  `confirm_trade()` (each side +20 XP, once). `src/lib/levels.ts` mirrors the level ladder. The app
+  wires the confirmation flow in Phase 3; the trade-completed screen is still a demo preview.
 
 ## Roadmap
 
-- **Phase 2:** Supabase schema (`profiles`, `listings` with availability / notice days / diet tags,
-  `trades`, `ratings`) with RLS, phone OTP auth,
-  photo upload to Storage, a PostGIS distance query that returns rounded distances only, and
-  `expo-location` on the location screen.
-- **Phase 3:** XP and level logic (both-sides confirmation), ratings, persisted saved items.
+- **Phase 2 (done):** Supabase schema (`profiles`, `profile_locations`, `listings`, `trades`,
+  `ratings`) with RLS, phone OTP auth, name step, location via `expo-location`, PostGIS feed with
+  rounded distances, photo upload to Storage, delete account.
+- **Phase 3:** in-app trade confirmation (both sides) and XP, ratings UI, saved items and
+  notifications on the server, push notifications, editing / removing your own listings.

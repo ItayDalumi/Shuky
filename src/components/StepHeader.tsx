@@ -11,18 +11,22 @@ export type StepHeaderProps = {
   title: string;
   subtitle?: React.ReactNode;
   onBack?: () => void;
+  /** No back arrow (e.g. right after verifying the phone) */
+  hideBack?: boolean;
 };
 
 /** Onboarding header: back arrow (right side in RTL), big title, muted subtitle. */
-export function StepHeader({ title, subtitle, onBack }: StepHeaderProps) {
+export function StepHeader({ title, subtitle, onBack, hideBack }: StepHeaderProps) {
   return (
     <View style={styles.container}>
-      <IconButton
-        icon={ArrowRight}
-        accessibilityLabel="חזרה"
-        onPress={onBack ?? (() => goBack(router, '/welcome'))}
-        style={styles.back}
-      />
+      {hideBack ? null : (
+        <IconButton
+          icon={ArrowRight}
+          accessibilityLabel="חזרה"
+          onPress={onBack ?? (() => goBack(router, '/welcome'))}
+          style={styles.back}
+        />
+      )}
       <View style={styles.texts}>
         <AppText variant="display">{title}</AppText>
         {subtitle ? (

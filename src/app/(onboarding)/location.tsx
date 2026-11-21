@@ -1,16 +1,43 @@
+import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
+import * as Location from 'expo-location';
 import { Lock, MapPin } from 'lucide-react-native';
 
 import { AppText, Button, Pill, Screen } from '@/components';
 import { finishOnboarding } from '@/lib/navigation';
+import { useAppStore } from '@/store/AppStore';
 import { colors, spacing } from '@/theme';
 
 /**
- * 04 · מיקום. Phase 2: expo-location, store a fuzzed point, and only ever show
- * rounded distances to neighbors (PostGIS). Never the address.
+ * 04 · מיקום. Gets a low-accuracy position, rounds it on the phone, and the server snaps it
+ * to a ~100 m grid. Neighbors only ever see a rounded distance, never the address.
  */
 export default function LocationScreen() {
+  const { mode, saveLocation } = useAppStore();
+  const [working, setWorking] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+
+  const share = async () => {
+    if (mode === 'demo') return finishOnboarding(router);
+    setWorking(true);
+    setNote(null);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setNote('בלי גישה למיקום נציג את המוצרים בלי מרחק. אפשר לשנות את זה בהגדרות הטלפון.');
+        return;
+      }
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      await saveLocation(position.coords.latitude, position.coords.longitude);
+      finishOnboarding(router);
+    } catch {
+      setNote('לא הצלחנו לקבל את המיקום. אפשר להמשיך בלי, ולנסות שוב אחר כך.');
+    } finally {
+      setWorking(false);
+    }
+  };
+
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.body} bounces={false}>
@@ -30,11 +57,16 @@ export default function LocationScreen() {
             כדי להראות לך מה יש בסביבה. השכנים יראו רק מרחק משוער – אף פעם לא את הכתובת שלך.
           </AppText>
           <Pill label="המיקום שלך מוגן" icon={Lock} tone="leaf" style={styles.pill} />
+          {note ? (
+            <AppText variant="small" color={colors.tomatoDark} center>
+              {note}
+            </AppText>
+          ) : null}
         </View>
 
         <View style={styles.spacer} />
 
-        <Button label="שיתוף מיקום משוער" onPress={() => finishOnboarding(router)} />
+        <Button label="שיתוף מיקום משוער" onPress={share} loading={working} />
         <Button label="אולי אחר כך" variant="secondary" onPress={() => finishOnboarding(router)} />
       </ScrollView>
     </Screen>

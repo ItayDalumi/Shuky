@@ -23,7 +23,7 @@ import { border, colors, radius, spacing } from '@/theme';
 /** 06 · עמוד מוצר */
 export default function ProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getListing, getSeller, isSaved, toggleSaved, user } = useAppStore();
+  const { getListing, getSeller, isSaved, toggleSaved, user, mode } = useAppStore();
 
   const listing = id ? getListing(id) : undefined;
   const seller = listing ? getSeller(listing.sellerId) : undefined;
@@ -120,7 +120,7 @@ export default function ProductScreen() {
             </AppText>
           ) : null}
 
-          <SellerCard seller={seller} />
+          <SellerCard seller={seller} isMine={isMine} />
         </View>
       </ScrollView>
 
@@ -140,11 +140,14 @@ export default function ProductScreen() {
               onPress={order}
               accessibilityLabel={`הזמנה מ${seller.name} בוואטסאפ`}
             />
-            <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push(`/trade/${listing.id}`)}>
-              <AppText variant="caption" color={colors.muted} center style={styles.doneLink}>
-                סגרתם עסקה? סמנו שהיא הושלמה
-              </AppText>
-            </Pressable>
+            {/* Phase 3 wires this to confirm_trade() (XP only after both sides confirm). Demo only for now. */}
+            {mode === 'demo' ? (
+              <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push(`/trade/${listing.id}`)}>
+                <AppText variant="caption" color={colors.muted} center style={styles.doneLink}>
+                  סגרתם עסקה? סמנו שהיא הושלמה
+                </AppText>
+              </Pressable>
+            ) : null}
           </>
         )}
       </View>

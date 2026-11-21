@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { Platform, Pressable, StyleSheet, TextInput, View, type TextInputInstance } from 'react-native';
 
 import { webDir } from '@/lib/rtl';
@@ -16,21 +16,37 @@ export type OtpInputProps = {
  * 4 digit boxes backed by one invisible TextInput, so paste and SMS autofill work.
  * Digits read left to right, like the code in the SMS.
  */
-export function OtpInput({ value, onChange, length = 4, autoFocus }: OtpInputProps) {
+export type OtpInputHandle = { focus: () => void };
+
+export const OtpInput = forwardRef<OtpInputHandle, OtpInputProps>(function OtpInput(
+  { value, onChange, length = 4, autoFocus },
+  ref,
+) {
   const inputRef = useRef<TextInputInstance>(null);
+  useImperativeHandle(ref, () => ({ focus: () => inputRef.current?.focus() }), []);
+  // 4 boxes match the design; 6 (Supabase SMS codes) shrink to fit the screen width.
+  const compact = length > 4;
 
   return (
     <Pressable
       accessibilityLabel="קוד אימות"
       onPress={() => inputRef.current?.focus()}
-      style={styles.row}
+      style={[styles.row, compact ? styles.rowCompact : null]}
       {...webDir('ltr')}
     >
       {Array.from({ length }, (_, i) => {
         const digit = value[i];
         const active = i === Math.min(value.length, length - 1) && value.length < length;
         return (
-          <View key={i} style={[styles.box, active ? styles.boxActive : null, digit ? styles.boxFilled : null]}>
+          <View
+            key={i}
+            style={[
+              styles.box,
+              compact ? styles.boxCompact : null,
+              active ? styles.boxActive : null,
+              digit ? styles.boxFilled : null,
+            ]}
+          >
             {digit ? (
               <AppText variant="display" weight="bold" style={styles.digit}>
                 {digit}
@@ -55,7 +71,7 @@ export function OtpInput({ value, onChange, length = 4, autoFocus }: OtpInputPro
       />
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   row: {
@@ -65,6 +81,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 14,
   },
+  rowCompact: { gap: 10 },
+  boxCompact: { width: undefined, flex: 1, maxWidth: 56, height: 66 },
   box: {
     width: 70,
     height: 78,

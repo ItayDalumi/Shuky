@@ -24,7 +24,7 @@ export default function ProfileScreen() {
 
   const stats = [
     { label: 'עסקאות', value: String(user.trades) },
-    { label: 'דירוג', value: user.rating.toFixed(1) },
+    { label: 'דירוג', value: user.rating === null ? '—' : user.rating.toFixed(1) },
     { label: 'מוצרים פעילים', value: String(myListings.length) },
   ];
 

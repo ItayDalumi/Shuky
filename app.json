@@ -60,6 +60,12 @@
           "photosPermission": "כדי להעלות תמונה של המוצר שלך",
           "cameraPermission": "כדי לצלם את המוצר שלך"
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "כדי להציג מאפים בסביבה. השכנים יראו רק מרחק משוער, אף פעם לא את הכתובת שלך."
+        }
       ]
     ]
   }

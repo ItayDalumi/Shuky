@@ -7,7 +7,8 @@ import { Bell, CakeSlice, Lock, LogOut, MapPin, Phone, Star, Trash2, type Lucide
 import { AppText, Input, Screen, ScreenHeader } from '@/components';
 import type { NotificationPrefs } from '@/data/types';
 import { confirmAction } from '@/lib/confirm';
-import { signOut } from '@/lib/navigation';
+import { errorMessage } from '@/lib/api';
+import { resetToWelcome } from '@/lib/navigation';
 import { ltr } from '@/lib/rtl';
 import { useAppStore } from '@/store/AppStore';
 import { border, colors, radius, spacing } from '@/theme';
@@ -18,15 +19,33 @@ const NOTIFICATION_ROWS: { key: keyof NotificationPrefs; icon: LucideIcon; label
   { key: 'ratings', icon: Star, label: 'דירוגים ורמות', hint: 'כשמדרגים אותך או כשעולים רמה' },
 ];
 
-/** הגדרות. Phase 2: profile and preferences are saved in Supabase; delete-account removes the user's data. */
+/** הגדרות. In live mode the name, sign out and delete account go to Supabase; toggles are still local (Phase 3). */
 export default function SettingsScreen() {
-  const { user, updateUser, notificationPrefs, setNotificationPref } = useAppStore();
+  const { user, updateUser, signOut, deleteAccount, notificationPrefs, setNotificationPref } = useAppStore();
   const [name, setName] = useState(user.name);
+  const [error, setError] = useState<string | null>(null);
 
-  const saveName = () => {
+  const saveName = async () => {
     const trimmed = name.trim();
-    if (trimmed.length >= 2) updateUser({ name: trimmed });
-    else setName(user.name);
+    if (trimmed === user.name) return;
+    if (trimmed.length < 2) return setName(user.name);
+    try {
+      setError(null);
+      await updateUser({ name: trimmed });
+    } catch (e) {
+      setError(errorMessage(e));
+      setName(user.name);
+    }
+  };
+
+  const run = async (action: () => Promise<void>) => {
+    try {
+      setError(null);
+      await action();
+      resetToWelcome(router);
+    } catch (e) {
+      setError(errorMessage(e));
+    }
   };
 
   const onSignOut = () =>
@@ -34,7 +53,7 @@ export default function SettingsScreen() {
       title: 'להתנתק מהחשבון?',
       message: 'אפשר להתחבר שוב בכל רגע עם מספר הטלפון שלך.',
       confirmLabel: 'התנתקות',
-      onConfirm: () => signOut(router),
+      onConfirm: () => run(signOut),
     });
 
   const onDeleteAccount = () =>
@@ -43,8 +62,8 @@ export default function SettingsScreen() {
       message: 'כל המוצרים, הדירוגים והנקודות שלך יימחקו לצמיתות. אי אפשר לבטל את הפעולה.',
       confirmLabel: 'מחיקה',
       destructive: true,
-      // Phase 2: call a Supabase function that deletes the user and their data, then sign out.
-      onConfirm: () => signOut(router),
+      // Live: removes photos, then delete_my_account() deletes the user (data cascades).
+      onConfirm: () => run(deleteAccount),
     });
 
   const version = Constants.expoConfig?.version ?? '1.0.0';
@@ -54,6 +73,11 @@ export default function SettingsScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <ScreenHeader title="הגדרות" fallback="/profile" />
+          {error ? (
+            <AppText variant="small" color={colors.tomatoDark}>
+              {error}
+            </AppText>
+          ) : null}
 
           <Section title="הפרופיל שלי">
             <View style={styles.padded}>

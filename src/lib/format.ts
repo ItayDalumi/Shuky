@@ -102,3 +102,14 @@ export function relativeTime(iso: string, now: Date = new Date()): string {
   if (hours < 24) return `לפני ${hours} שעות`;
   return relativeDay(daysAgo(iso, now));
 }
+
+/** "4.9", or "חדש/ה" before the first rating */
+export function formatRating(rating: number | null): string {
+  return rating === null ? 'חדש/ה' : rating.toFixed(1);
+}
+
+/** Rounded distance, or a neutral fallback when no location was shared. */
+export function formatDistanceOrNearby(meters: number | null, fromMe = false): string {
+  if (meters === null) return 'בשכונה';
+  return fromMe ? formatDistanceFromMe(meters) : formatDistance(meters);
+}

@@ -3,18 +3,32 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 're
 import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppText, Button, Input, Screen, StepHeader } from '@/components';
+import { errorMessage } from '@/lib/api';
 import { formatPhoneInput, isValidIsraeliMobile } from '@/lib/format';
+import { useAppStore } from '@/store/AppStore';
 import { colors, spacing } from '@/theme';
 
-/** 02 · התחברות. Phase 2: supabase.auth.signInWithOtp({ phone }). */
+/** 02 · התחברות. Live mode sends a real SMS code (Supabase phone auth). */
 export default function PhoneScreen() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
+  const { sendOtp } = useAppStore();
   const [phone, setPhone] = useState('');
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const valid = isValidIsraeliMobile(phone);
 
-  const submit = () => {
-    if (!valid) return;
-    router.push({ pathname: '/otp', params: { phone, mode: mode ?? 'signup' } });
+  const submit = async () => {
+    if (!valid || sending) return;
+    setSending(true);
+    setError(null);
+    try {
+      await sendOtp(phone);
+      router.push({ pathname: '/otp', params: { phone, mode: mode ?? 'signup' } });
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -40,13 +54,18 @@ export default function PhoneScreen() {
             onSubmitEditing={submit}
             containerStyle={styles.input}
           />
+          {error ? (
+            <AppText variant="small" color={colors.tomatoDark}>
+              {error}
+            </AppText>
+          ) : null}
 
           <View style={styles.spacer} />
 
           <AppText variant="caption" color={colors.muted} center>
             בלחיצה על המשך את/ה מאשר/ת את תנאי השימוש ומדיניות הפרטיות
           </AppText>
-          <Button label="שלחו לי קוד" onPress={submit} disabled={!valid} />
+          <Button label="שלחו לי קוד" onPress={submit} disabled={!valid} loading={sending} />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

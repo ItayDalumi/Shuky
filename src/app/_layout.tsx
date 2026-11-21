@@ -47,10 +47,7 @@ export default function RootLayout() {
                   headerShown: false,
                   contentStyle: { backgroundColor: colors.cream },
                 }}
-              >
-                <Stack.Screen name="listing/new" options={{ presentation: 'modal' }} />
-                <Stack.Screen name="trade/[id]" options={{ gestureEnabled: false }} />
-              </Stack>
+              />
             </View>
           </View>
         </AppStoreProvider>
