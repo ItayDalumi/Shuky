@@ -1,5 +1,4 @@
-import type { Category, DealType, Listing } from '@/data/types';
-import { CATEGORIES } from '@/data/categories';
+import type { Availability, Listing } from '@/data/types';
 
 /**
  * Human distance, always rounded. We never expose exact locations:
@@ -17,21 +16,14 @@ export function formatDistanceFromMe(meters: number): string {
   return `${formatDistance(meters)} ממך`;
 }
 
-export function formatPrice(dealType: DealType, price?: number): string {
-  switch (dealType) {
-    case 'free':
-      return 'חינם';
-    case 'trade':
-      return 'להחלפה';
-    case 'sale':
-      return `₪${price ?? 0}`;
-  }
+/** Every listing is for sale: "₪25" */
+export function formatPrice(price: number): string {
+  return `₪${price}`;
 }
 
-export const DEAL_TYPE_LABELS: Record<DealType, string> = {
-  sale: 'מכירה',
-  trade: 'החלפה',
-  free: 'חינם',
+export const AVAILABILITY_LABELS: Record<Availability, string> = {
+  ready: 'מוכן עכשיו',
+  preorder: 'בהזמנה מראש',
 };
 
 /** Days between `isoDate` and today (0 = today). */
@@ -48,14 +40,28 @@ export function relativeDay(days: number): string {
   return `לפני ${days} ימים`;
 }
 
-/** "נאפה היום" / "נקטף אתמול" / "נאסף לפני 3 ימים" */
-export function freshLabel(category: Category, freshAt: string): string {
-  return `${CATEGORIES[category].freshVerb} ${relativeDay(daysAgo(freshAt))}`;
+/** "נאפה היום" / "נאפה אתמול" */
+export function bakedLabel(bakedAt: string): string {
+  return `נאפה ${relativeDay(daysAgo(bakedAt))}`;
+}
+
+/** "יום מראש" / "יומיים מראש" / "3 ימים מראש" / "שבוע מראש" */
+export function noticeLabel(days: number): string {
+  if (days === 1) return 'יום מראש';
+  if (days === 2) return 'יומיים מראש';
+  if (days === 7) return 'שבוע מראש';
+  return `${days} ימים מראש`;
+}
+
+/** Freshness / ordering line: "נאפה היום" or "בהזמנה, יומיים מראש" */
+export function availabilityLabel(listing: Pick<Listing, 'availability' | 'bakedAt' | 'noticeDays'>): string {
+  if (listing.availability === 'preorder') return `בהזמנה, ${noticeLabel(listing.noticeDays ?? 1)}`;
+  return bakedLabel(listing.bakedAt ?? new Date().toISOString());
 }
 
 /** "₪25 · קופסה של 12" */
-export function formatPriceLine(listing: Pick<Listing, 'dealType' | 'price' | 'unit'>): string {
-  const price = formatPrice(listing.dealType, listing.price);
+export function formatPriceLine(listing: Pick<Listing, 'price' | 'unit'>): string {
+  const price = formatPrice(listing.price);
   return listing.unit ? `${price} · ${listing.unit}` : price;
 }
 

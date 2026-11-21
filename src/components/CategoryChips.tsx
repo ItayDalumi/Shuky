@@ -4,7 +4,7 @@ import { CATEGORY_FILTERS, type CategoryFilter } from '@/data/categories';
 import { spacing } from '@/theme';
 import { Chip } from './Chip';
 
-/** Horizontally scrolling category filter: הכל, ירקות, פירות, ביצים, מאפים */
+/** Horizontally scrolling category filter: הכל, עוגות, עוגיות, מאפים, לחם וחלות, קינוחים */
 export function CategoryChips({ value, onChange }: { value: CategoryFilter; onChange: (v: CategoryFilter) => void }) {
   return (
     <ScrollView

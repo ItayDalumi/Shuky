@@ -1,6 +1,6 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { Apple, Carrot, Cookie, Egg, type LucideIcon } from 'lucide-react-native';
+import { CakeSlice, Cookie, Croissant, Dessert, type LucideIcon } from 'lucide-react-native';
 
 import { AppText, Button, Screen } from '@/components';
 import { colors, spacing, typography } from '@/theme';
@@ -10,11 +10,11 @@ type HeroItem = { Icon: LucideIcon; color: string; background: string };
 // Each row is listed right to left (RTL). Matches the Figma hero.
 const HERO_ROWS: HeroItem[][] = [
   [
-    { Icon: Apple, color: colors.leaf, background: colors.leafLight },
-    { Icon: Carrot, color: colors.tomatoDark, background: colors.tomatoLight },
+    { Icon: Croissant, color: colors.honeyDark, background: colors.white },
+    { Icon: CakeSlice, color: colors.tomatoDark, background: colors.tomatoLight },
   ],
   [
-    { Icon: Egg, color: colors.honeyDark, background: colors.white },
+    { Icon: Dessert, color: colors.leafDark, background: colors.leafLight },
     { Icon: Cookie, color: colors.honeyDark, background: colors.white },
   ],
 ];
@@ -44,10 +44,10 @@ export default function WelcomeScreen() {
           Shuky
         </AppText>
         <AppText variant="tagline" center>
-          מה שגדל ונאפה בשכונה שלך
+          מה שנאפה בשכונה שלך
         </AppText>
         <AppText variant="body" color={colors.muted} center>
-          קונים, מוכרים ומחליפים ירקות, פירות ומאפים ביתיים עם השכנים
+          עוגות, עוגיות ומאפים ביתיים – ישר מהתנור של השכנים
         </AppText>
 
         <View style={styles.spacer} />

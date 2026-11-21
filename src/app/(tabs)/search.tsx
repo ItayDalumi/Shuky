@@ -22,7 +22,7 @@ export default function SearchScreen() {
         <AppText variant="heading" accessibilityRole="header">
           חיפוש בשכונה
         </AppText>
-        <SearchField value={query} onChangeText={setQuery} placeholder="עגבניות, חלה, ביצים..." />
+        <SearchField value={query} onChangeText={setQuery} placeholder="עוגת גבינה, חלה, רוגלך..." />
         <CategoryChips value={category} onChange={setCategory} />
 
         <AppText variant="small" color={colors.muted}>

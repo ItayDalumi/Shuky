@@ -26,7 +26,7 @@ const AppStoreContext = createContext<AppStore | null>(null);
 
 export function AppStoreProvider({ children }: PropsWithChildren) {
   const [listings, setListings] = useState<Listing[]>(initialListings);
-  const [savedIds, setSavedIds] = useState<string[]>(['l4']);
+  const [savedIds, setSavedIds] = useState<string[]>(['l2']);
 
   const getListing = useCallback((id: string) => listings.find((l) => l.id === id), [listings]);
   const getSeller = useCallback((id: string) => sellers.find((s) => s.id === id), []);

@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, View } from 'react-native';
-import { MapPin } from 'lucide-react-native';
+import { CalendarClock, Clock, MapPin, Star } from 'lucide-react-native';
 
 import type { Listing, Seller } from '@/data/types';
-import { formatDistanceFromMe, formatPrice } from '@/lib/format';
+import { daysAgo, formatDistanceFromMe, formatPrice, relativeDay } from '@/lib/format';
 import { border, colors, radius, spacing } from '@/theme';
 import { AppText } from './AppText';
 import { CategoryArt } from './CategoryArt';
@@ -14,19 +14,28 @@ export type ProductCardProps = {
   onPress?: () => void;
 };
 
-/** Feed card: image, title, rounded distance, price and seller level. */
+/** Feed card: image + availability, title, rounded distance, price, seller rating and level. */
 export function ProductCard({ listing, seller, onPress }: ProductCardProps) {
   const isMine = seller?.id === 'me';
-  const priceColor = listing.dealType === 'free' ? colors.leaf : colors.tomato;
+  const preorder = listing.availability === 'preorder';
 
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${listing.title}, ${formatPrice(listing.dealType, listing.price)}`}
+      accessibilityLabel={`${listing.title}, ${formatPrice(listing.price)}`}
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed ? { opacity: 0.9 } : null]}
     >
-      <CategoryArt category={listing.category} photoUri={listing.photoUri} style={styles.image} />
+      <View>
+        <CategoryArt category={listing.category} photoUri={listing.photoUri} style={styles.image} />
+        <Pill
+          size="sm"
+          tone={preorder ? 'honey' : 'leaf'}
+          icon={preorder ? CalendarClock : Clock}
+          label={preorder ? 'בהזמנה' : `נאפה ${relativeDay(daysAgo(listing.bakedAt ?? listing.createdAt))}`}
+          style={styles.badge}
+        />
+      </View>
 
       <AppText variant="cardTitle" numberOfLines={1}>
         {listing.title}
@@ -40,10 +49,20 @@ export function ProductCard({ listing, seller, onPress }: ProductCardProps) {
       </View>
 
       <View style={styles.bottom}>
-        <AppText variant="bodyMedium" weight="bold" color={priceColor} numberOfLines={1}>
-          {formatPrice(listing.dealType, listing.price)}
+        <AppText variant="bodyMedium" weight="bold" color={colors.tomato} numberOfLines={1}>
+          {formatPrice(listing.price)}
         </AppText>
-        {seller ? <Pill size="sm" tone="leaf" label={`רמה ${seller.level}`} /> : null}
+        {seller ? (
+          <View style={styles.sellerMeta}>
+            <View style={styles.row} accessibilityLabel={`דירוג ${seller.rating.toFixed(1)}`}>
+              <Star size={12} color={colors.honey} fill={colors.honey} />
+              <AppText variant="captionMedium" color={colors.ink}>
+                {seller.rating.toFixed(1)}
+              </AppText>
+            </View>
+            <Pill size="sm" tone="leaf" label={`רמה ${seller.level}`} />
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -63,14 +82,25 @@ const styles = StyleSheet.create({
     height: 112,
     borderRadius: radius.md,
   },
+  badge: {
+    position: 'absolute',
+    top: spacing.xs,
+    start: spacing.xs,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
   },
   bottom: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 4,
+  },
+  sellerMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
 });

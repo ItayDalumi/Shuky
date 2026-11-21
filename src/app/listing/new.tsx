@@ -14,33 +14,40 @@ import {
   SegmentedControl,
   SelectSheet,
 } from '@/components';
-import { CATEGORIES, CATEGORY_ORDER } from '@/data/categories';
-import type { Category, DealType } from '@/data/types';
-import { DEAL_TYPE_LABELS, relativeDay } from '@/lib/format';
+import { CATEGORIES, CATEGORY_ORDER, DIETARY_LABELS, DIETARY_ORDER, NOTICE_OPTIONS } from '@/data/categories';
+import type { Availability, Category, DietaryTag } from '@/data/types';
+import { AVAILABILITY_LABELS, noticeLabel, relativeDay } from '@/lib/format';
 import { goBack } from '@/lib/navigation';
 import { useAppStore } from '@/store/AppStore';
 import { colors, radius, spacing } from '@/theme';
 
-const DEAL_TYPES: DealType[] = ['sale', 'trade', 'free'];
-const FRESH_OPTIONS = ['0', '1', '2', '3'] as const;
-type FreshKey = (typeof FRESH_OPTIONS)[number];
+const AVAILABILITY: Availability[] = ['ready', 'preorder'];
+const BAKED_OPTIONS = ['0', '1', '2'] as const;
+type BakedKey = (typeof BAKED_OPTIONS)[number];
+type NoticeKey = `${(typeof NOTICE_OPTIONS)[number]}`;
 
 /** 07 · הוספת מוצר. Phase 2: upload the photo to Supabase Storage and insert into `listings`. */
 export default function NewListingScreen() {
   const { addListing } = useAppStore();
 
   const [photoUri, setPhotoUri] = useState<string>();
-  const [category, setCategory] = useState<Category>('baked');
+  const [category, setCategory] = useState<Category>('cakes');
   const [title, setTitle] = useState('');
-  const [dealType, setDealType] = useState<DealType>('sale');
+  const [availability, setAvailability] = useState<Availability>('ready');
   const [price, setPrice] = useState('');
-  const [freshDays, setFreshDays] = useState<FreshKey>('0');
+  const [bakedDays, setBakedDays] = useState<BakedKey>('0');
+  const [noticeDays, setNoticeDays] = useState<NoticeKey>('2');
+  const [unit, setUnit] = useState('');
+  const [dietary, setDietary] = useState<DietaryTag[]>(['kosher']);
   const [description, setDescription] = useState('');
-  const [freshSheetOpen, setFreshSheetOpen] = useState(false);
+  const [sheet, setSheet] = useState<'baked' | 'notice' | null>(null);
 
-  const freshVerb = CATEGORIES[category].freshVerb;
+  const preorder = availability === 'preorder';
   const priceNumber = Number(price);
-  const canPublish = title.trim().length > 1 && (dealType !== 'sale' || priceNumber > 0);
+  const canPublish = title.trim().length > 1 && priceNumber > 0;
+
+  const toggleDietary = (tag: DietaryTag) =>
+    setDietary((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
 
   const pickPhoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -54,15 +61,18 @@ export default function NewListingScreen() {
 
   const publish = () => {
     if (!canPublish) return;
-    const freshAt = new Date();
-    freshAt.setDate(freshAt.getDate() - Number(freshDays));
+    const bakedAt = new Date();
+    bakedAt.setDate(bakedAt.getDate() - Number(bakedDays));
     const listing = addListing({
       title: title.trim(),
       category,
-      dealType,
-      price: dealType === 'sale' ? priceNumber : undefined,
+      price: priceNumber,
+      unit: unit.trim() || undefined,
       description: description.trim(),
-      freshAt: freshAt.toISOString(),
+      availability,
+      bakedAt: preorder ? undefined : bakedAt.toISOString(),
+      noticeDays: preorder ? Number(noticeDays) : undefined,
+      dietary: DIETARY_ORDER.filter((t) => dietary.includes(t)),
       photoUri,
     });
     router.replace(`/product/${listing.id}`);
@@ -104,7 +114,7 @@ export default function NewListingScreen() {
                   הוסיפו תמונה אמיתית
                 </AppText>
                 <AppText variant="caption" color={colors.muted} center>
-                  תמונה אמיתית = יותר אמון ויותר עסקאות
+                  תמונה אמיתית = יותר אמון ויותר הזמנות
                 </AppText>
               </>
             )}
@@ -126,7 +136,7 @@ export default function NewListingScreen() {
 
           <Input
             label="שם המוצר"
-            placeholder="למשל: עוגיות שוקולד"
+            placeholder="למשל: עוגת גבינה פירורים"
             value={title}
             onChangeText={setTitle}
             maxLength={40}
@@ -134,12 +144,12 @@ export default function NewListingScreen() {
           />
 
           <View style={styles.field}>
-            <AppText variant="label">סוג עסקה</AppText>
+            <AppText variant="label">זמינות</AppText>
             <SegmentedControl
-              accessibilityLabel="סוג עסקה"
-              options={DEAL_TYPES.map((key) => ({ key, label: DEAL_TYPE_LABELS[key] }))}
-              value={dealType}
-              onChange={setDealType}
+              accessibilityLabel="זמינות"
+              options={AVAILABILITY.map((key) => ({ key, label: AVAILABILITY_LABELS[key] }))}
+              value={availability}
+              onChange={setAvailability}
             />
           </View>
 
@@ -147,30 +157,58 @@ export default function NewListingScreen() {
             <Input
               label="מחיר"
               placeholder="25"
-              value={dealType === 'sale' ? price : DEAL_TYPE_LABELS[dealType]}
+              value={price}
               onChangeText={(t) => setPrice(t.replace(/[^\d]/g, '').slice(0, 4))}
               keyboardType="number-pad"
-              editable={dealType === 'sale'}
               leading={
-                dealType === 'sale' ? (
-                  <AppText variant="bodyMedium" color={colors.muted}>
-                    ₪
-                  </AppText>
-                ) : undefined
+                <AppText variant="bodyMedium" color={colors.muted}>
+                  ₪
+                </AppText>
               }
               containerStyle={styles.half}
             />
-            <Input
-              label={`${freshVerb} ב-`}
-              value={relativeDay(Number(freshDays))}
-              onPressField={() => setFreshSheetOpen(true)}
-              containerStyle={styles.half}
-            />
+            {preorder ? (
+              <Input
+                label="להזמין"
+                value={noticeLabel(Number(noticeDays))}
+                onPressField={() => setSheet('notice')}
+                containerStyle={styles.half}
+              />
+            ) : (
+              <Input
+                label="נאפה ב-"
+                value={relativeDay(Number(bakedDays))}
+                onPressField={() => setSheet('baked')}
+                containerStyle={styles.half}
+              />
+            )}
+          </View>
+
+          <Input
+            label="כמות או גודל (לא חובה)"
+            placeholder="למשל: קופסה של 12, עוגה ל-10 סועדים"
+            value={unit}
+            onChangeText={setUnit}
+            maxLength={30}
+          />
+
+          <View style={styles.field}>
+            <AppText variant="label">מתאים ל...</AppText>
+            <View style={styles.chips}>
+              {DIETARY_ORDER.map((tag) => (
+                <Chip
+                  key={tag}
+                  label={DIETARY_LABELS[tag]}
+                  selected={dietary.includes(tag)}
+                  onPress={() => toggleDietary(tag)}
+                />
+              ))}
+            </View>
           </View>
 
           <Input
             label="כמה מילים על המוצר (לא חובה)"
-            placeholder="איך מכינים, כמה יש, מתי אפשר לאסוף..."
+            placeholder="מה יש בפנים, איך שומרים, מתי אפשר לאסוף..."
             value={description}
             onChangeText={setDescription}
             multiline
@@ -184,12 +222,20 @@ export default function NewListingScreen() {
       </KeyboardAvoidingView>
 
       <SelectSheet
-        visible={freshSheetOpen}
-        title={`מתי ${freshVerb}?`}
-        options={FRESH_OPTIONS.map((key) => ({ key, label: relativeDay(Number(key)) }))}
-        value={freshDays}
-        onSelect={setFreshDays}
-        onClose={() => setFreshSheetOpen(false)}
+        visible={sheet === 'baked'}
+        title="מתי נאפה?"
+        options={BAKED_OPTIONS.map((key) => ({ key, label: relativeDay(Number(key)) }))}
+        value={bakedDays}
+        onSelect={setBakedDays}
+        onClose={() => setSheet(null)}
+      />
+      <SelectSheet
+        visible={sheet === 'notice'}
+        title="כמה זמן מראש צריך להזמין?"
+        options={NOTICE_OPTIONS.map((d) => ({ key: `${d}` as NoticeKey, label: noticeLabel(d) }))}
+        value={noticeDays}
+        onSelect={setNoticeDays}
+        onClose={() => setSheet(null)}
       />
     </Screen>
   );

@@ -12,7 +12,7 @@ export type SegmentedControlProps<T extends string> = {
   accessibilityLabel?: string;
 };
 
-/** Deal type picker: מכירה / החלפה / חינם */
+/** Two-to-three option picker, e.g. availability: מוכן עכשיו / בהזמנה מראש */
 export function SegmentedControl<T extends string>({
   options,
   value,

@@ -49,7 +49,7 @@ export default function HomeScreen() {
 
         <CategoryChips value={category} onChange={setCategory} />
 
-        <SectionHeader title="טרי בשכונה" actionLabel="לכל המוצרים" onActionPress={() => router.navigate('/search')} />
+        <SectionHeader title="טרי מהתנור" actionLabel="לכל המוצרים" onActionPress={() => router.navigate('/search')} />
 
         {listings.length > 0 ? (
           <ProductGrid listings={listings} />
