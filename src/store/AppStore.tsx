@@ -36,12 +36,14 @@ type AppStore = {
   user: CurrentUser;
 
   // Auth & profile
-  sendOtp: (phone: string) => Promise<void>;
+  /** Emails a one-time code */
+  sendOtp: (email: string) => Promise<void>;
   /** Returns what comes next: the name screen for new users, or the app. */
-  verifyOtp: (phone: string, code: string) => Promise<'needsProfile' | 'ready'>;
-  createProfile: (name: string) => Promise<void>;
+  verifyOtp: (email: string, code: string) => Promise<'needsProfile' | 'ready'>;
+  /** phone: the WhatsApp number neighbors use to order */
+  createProfile: (name: string, phone: string) => Promise<void>;
   saveLocation: (lat: number, lng: number) => Promise<void>;
-  updateUser: (patch: Partial<Pick<CurrentUser, 'name'>>) => Promise<void>;
+  updateUser: (patch: Partial<Pick<CurrentUser, 'name' | 'phone'>>) => Promise<void>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
 
@@ -74,6 +76,7 @@ const EMPTY_USER: CurrentUser = {
   id: '',
   name: '',
   community: 'להבים',
+  email: '',
   phone: '',
   xp: 0,
   trades: 0,
@@ -118,10 +121,10 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   }, [live]);
 
   const loadProfile = useCallback(
-    async (userId: string): Promise<'needsProfile' | 'ready'> => {
-      const profile = await api.fetchMyProfile(userId);
+    async (userId: string, email: string): Promise<'needsProfile' | 'ready'> => {
+      const profile = await api.fetchMyProfile(userId, email);
       if (!profile) {
-        setUser({ ...EMPTY_USER, id: userId });
+        setUser({ ...EMPTY_USER, id: userId, email });
         setAuthStatus('needsProfile');
         return 'needsProfile';
       }
@@ -134,8 +137,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   );
 
   const applySession = useCallback(
-    (userId: string | null) => {
-      if (userId === null) {
+    (session: { id: string; email: string } | null) => {
+      if (session === null) {
         setUser(EMPTY_USER);
         setListings([]);
         setSellers([]);
@@ -143,7 +146,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         setAuthStatus('signedOut');
         return;
       }
-      loadProfile(userId).catch(() => setAuthStatus('signedOut'));
+      loadProfile(session.id, session.email).catch(() => setAuthStatus('signedOut'));
     },
     [loadProfile],
   );
@@ -151,7 +154,10 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   // Live: restore the saved session on launch, and react when it ends (sign out, expiry).
   useEffect(() => {
     if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => applySession(data.session?.user.id ?? null));
+    supabase.auth.getSession().then(({ data }) => {
+      const u = data.session?.user;
+      applySession(u ? { id: u.id, email: u.email ?? '' } : null);
+    });
     const { data } = supabase.auth.onAuthStateChange((event) => {
       // Sign-in is handled by verifyOtp(). Defer: Supabase calls made inside this callback can deadlock.
       if (event === 'SIGNED_OUT') setTimeout(() => applySession(null), 0);
@@ -163,34 +169,37 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   // Auth & profile actions
   // ---------------------------------------------------------------------------
   const sendOtp = useCallback(
-    async (phone: string) => {
-      if (live) await api.sendOtp(phone);
+    async (email: string) => {
+      if (live) await api.sendOtp(email);
     },
     [live],
   );
 
   const verifyOtp = useCallback(
-    async (phone: string, code: string) => {
-      if (!live) return 'needsProfile' as const; // demo: walk through name + location
-      await api.verifyOtp(phone, code);
+    async (email: string, code: string) => {
+      if (!live) {
+        setUser((u) => ({ ...u, email: email.trim().toLowerCase() }));
+        return 'needsProfile' as const; // demo: walk through name + location
+      }
+      await api.verifyOtp(email, code);
       const { data } = await supabase!.auth.getUser();
       if (!data.user) throw new Error('no user after verification');
-      return loadProfile(data.user.id);
+      return loadProfile(data.user.id, data.user.email ?? email);
     },
     [live, loadProfile],
   );
 
   const createProfile = useCallback(
-    async (name: string) => {
+    async (name: string, phone: string) => {
       const trimmed = name.trim();
       if (!live) {
-        setUser((u) => ({ ...u, name: trimmed }));
+        setUser((u) => ({ ...u, name: trimmed, phone }));
         return;
       }
-      await api.createMyProfile(user.id, trimmed);
-      await loadProfile(user.id);
+      await api.createMyProfile(user.id, trimmed, phone);
+      await loadProfile(user.id, user.email);
     },
-    [live, user.id, loadProfile],
+    [live, user.id, user.email, loadProfile],
   );
 
   const saveLocation = useCallback(
@@ -203,8 +212,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   );
 
   const updateUser = useCallback(
-    async (patch: Partial<Pick<CurrentUser, 'name'>>) => {
-      if (live && patch.name) await api.updateMyName(user.id, patch.name);
+    async (patch: Partial<Pick<CurrentUser, 'name' | 'phone'>>) => {
+      if (live && (patch.name || patch.phone)) await api.updateMyProfile(user.id, patch);
       setUser((prev) => ({ ...prev, ...patch }));
       if (patch.name) {
         setSellers((prev) => prev.map((s) => (s.id === user.id ? { ...s, name: patch.name! } : s)));

@@ -12,12 +12,12 @@ import { useAppStore } from '@/store/AppStore';
 import { colors, spacing } from '@/theme';
 
 const RESEND_SECONDS = 60;
-/** Supabase sends 6-digit SMS codes; demo mode keeps the 4 boxes from the design. */
+/** Supabase email codes are 6 digits; demo mode keeps the 4 boxes from the design. */
 const CODE_LENGTH = isSupabaseConfigured ? 6 : 4;
 
 /** 03 · קוד אימות */
 export default function OtpScreen() {
-  const { phone = '050-123-4567' } = useLocalSearchParams<{ phone?: string }>();
+  const { email = 'name@example.com' } = useLocalSearchParams<{ email?: string }>();
   const { verifyOtp, sendOtp } = useAppStore();
   const [code, setCode] = useState('');
   const [secondsLeft, setSecondsLeft] = useState(RESEND_SECONDS);
@@ -38,7 +38,7 @@ export default function OtpScreen() {
     setVerifying(true);
     setError(null);
     try {
-      const next = await verifyOtp(phone, value);
+      const next = await verifyOtp(email, value);
       if (next === 'ready') finishOnboarding(router);
       else router.replace('/name');
     } catch (e) {
@@ -61,7 +61,7 @@ export default function OtpScreen() {
     setError(null);
     setSecondsLeft(RESEND_SECONDS);
     try {
-      await sendOtp(phone);
+      await sendOtp(email);
     } catch (e) {
       setError(errorMessage(e));
     }
@@ -71,7 +71,10 @@ export default function OtpScreen() {
     <Screen>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <StepHeader title="מה הקוד שקיבלת?" subtitle={`שלחנו קוד בן ${CODE_LENGTH} ספרות ל-${ltr(phone)}`} />
+          <StepHeader
+            title="מה הקוד שקיבלת?"
+            subtitle={`שלחנו קוד בן ${CODE_LENGTH} ספרות ל-${ltr(email)}. לא מוצאים? בדקו גם בספאם.`}
+          />
 
           <View style={styles.otp}>
             <OtpInput ref={otpRef} value={code} onChange={onCodeChange} length={CODE_LENGTH} autoFocus />

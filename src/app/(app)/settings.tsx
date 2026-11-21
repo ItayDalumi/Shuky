@@ -2,12 +2,13 @@ import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
-import { Bell, CakeSlice, Lock, LogOut, MapPin, Phone, Star, Trash2, type LucideIcon } from 'lucide-react-native';
+import { Bell, CakeSlice, Lock, LogOut, Mail, MapPin, Star, Trash2, type LucideIcon } from 'lucide-react-native';
 
 import { AppText, Input, Screen, ScreenHeader } from '@/components';
 import type { NotificationPrefs } from '@/data/types';
 import { confirmAction } from '@/lib/confirm';
 import { errorMessage } from '@/lib/api';
+import { formatPhoneInput, isValidIsraeliMobile } from '@/lib/format';
 import { resetToWelcome } from '@/lib/navigation';
 import { ltr } from '@/lib/rtl';
 import { useAppStore } from '@/store/AppStore';
@@ -23,6 +24,7 @@ const NOTIFICATION_ROWS: { key: keyof NotificationPrefs; icon: LucideIcon; label
 export default function SettingsScreen() {
   const { user, updateUser, signOut, deleteAccount, notificationPrefs, setNotificationPref } = useAppStore();
   const [name, setName] = useState(user.name);
+  const [phone, setPhone] = useState(user.phone);
   const [error, setError] = useState<string | null>(null);
 
   const saveName = async () => {
@@ -35,6 +37,18 @@ export default function SettingsScreen() {
     } catch (e) {
       setError(errorMessage(e));
       setName(user.name);
+    }
+  };
+
+  const savePhone = async () => {
+    if (phone === user.phone) return;
+    if (!isValidIsraeliMobile(phone)) return setPhone(user.phone);
+    try {
+      setError(null);
+      await updateUser({ phone });
+    } catch (e) {
+      setError(errorMessage(e));
+      setPhone(user.phone);
     }
   };
 
@@ -91,9 +105,20 @@ export default function SettingsScreen() {
                 returnKeyType="done"
                 autoComplete="name"
               />
+              <Input
+                label="מספר וואטסאפ"
+                value={phone}
+                onChangeText={(t) => setPhone(formatPhoneInput(t))}
+                onBlur={savePhone}
+                onSubmitEditing={savePhone}
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                ltrValue
+                returnKeyType="done"
+              />
             </View>
             <Row icon={MapPin} label="יישוב" value={user.community} hint="כרגע שוקי פעיל רק בלהבים" />
-            <Row icon={Phone} label="טלפון" value={ltr(user.phone)} last />
+            <Row icon={Mail} label="מייל" value={ltr(user.email)} hint="משמש רק לקוד הכניסה" last />
           </Section>
 
           <Section title="התראות">
@@ -183,7 +208,7 @@ function Row({ icon: Icon, label, value, hint, trailing, onPress, danger, iconCo
         ) : null}
       </View>
       {value ? (
-        <AppText variant="body" color={colors.muted}>
+        <AppText variant="body" color={colors.muted} numberOfLines={1} style={styles.rowValue}>
           {value}
         </AppText>
       ) : null}
@@ -222,7 +247,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     borderRadius: radius.xl,
   },
-  padded: { padding: spacing.md, paddingBottom: spacing.xs },
+  padded: { padding: spacing.md, paddingBottom: spacing.xs, gap: spacing.sm },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -233,4 +258,5 @@ const styles = StyleSheet.create({
   },
   rowDivider: { borderBottomWidth: border.hairline, borderBottomColor: colors.line },
   rowTexts: { flex: 1, alignItems: 'flex-start', gap: 2 },
+  rowValue: { flexShrink: 1, maxWidth: '55%' },
 });

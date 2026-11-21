@@ -5,8 +5,8 @@
 levels front and center. Items are either ready now or baked to order (pre-order). Launch community:
 Lehavim. The app is mobile-first (iOS / Android), and the whole UI is Hebrew, right-to-left.
 
-> **Status: Phase 2.** Supabase backend: phone sign-in, profiles, location (rounded), listings
-> with photos. Without a `.env` the app runs in **demo mode** on mock data.
+> **Status: Phase 2.** Supabase backend: sign-in with an email code, profiles, location (rounded),
+> listings with photos. Only free tools. Without a `.env` the app runs in **demo mode** on mock data.
 
 ![The 9 Phase 1 screens](docs/phase-1-screens.png)
 
@@ -30,19 +30,26 @@ npm start            # Expo dev server for iOS / Android (Expo Go or a dev build
 
 ### Demo mode vs live mode
 
-- **Demo** (no `.env`): everything runs in memory on `src/data/mock.ts`. Any phone number and any
-  4-digit code work. Good for design work and quick previews in Expo Go.
-- **Live** (`.env` with your Supabase project): real SMS sign-in (6-digit code), profiles, rounded
-  distances and listings with photos, all from Supabase.
+- **Demo** (no `.env`): everything runs in memory on `src/data/mock.ts`. Any email and any 4-digit
+  code work. Good for design work and quick previews in Expo Go.
+- **Live** (`.env` with your Supabase project): sign-in with a 6-digit code sent by email, profiles,
+  rounded distances and listings with photos, all from Supabase.
+
+Sign-in uses a free email code instead of SMS. Sellers still need a phone number for WhatsApp orders,
+so new users enter one on the name screen (it isn't verified).
 
 ## Supabase setup (live mode)
 
 1. Create a project at [supabase.com](https://supabase.com) (region: Frankfurt is closest to Israel).
-2. **SQL Editor** → paste `supabase/migrations/20261121120000_init.sql` → **Run**. This creates the
-   tables, the security rules (RLS), the feed / trade / delete-account functions and the
-   `listing-photos` storage bucket.
-3. **Authentication → Sign In / Providers → Phone**: enable it and connect an SMS provider (e.g.
-   Twilio). For development you can add test numbers with a fixed code there, so no real SMS is sent.
+2. **SQL Editor** → run each file in `supabase/migrations/` **in order** (paste → **Run**):
+   `20261121120000_init.sql`, then `20261122090000_email_auth.sql`. This creates the tables, the
+   security rules (RLS), the feed / trade / delete-account functions and the `listing-photos` bucket.
+3. **Email code** (free; the Email provider is on by default):
+   **Authentication → Emails → Templates → Magic Link**: set the body to show the code, e.g.
+   `<h2>הקוד שלך לשוקי</h2><p style="font-size:28px">{{ .Token }}</p>` and subject `הקוד שלך לשוקי`.
+   Supabase's built-in mailer is limited to a few emails per hour, which is fine for testing. Before
+   launch, connect a free SMTP service (e.g. Resend or Brevo free tiers) under
+   **Authentication → Emails → SMTP Settings**.
 4. **Project Settings → API**: copy the Project URL and the anon / publishable key into a `.env` file
    (see `.env.example`). Never use the `service_role` / secret key in the app.
 5. Restart with a clean cache: `npx expo start --clear`.
@@ -68,7 +75,7 @@ src/
   app/                      Expo Router routes (every file is a screen)
     _layout.tsx             Root: fonts (Rubik), RTL, providers, stack
     index.tsx               Start: resumes the session, or goes to /welcome
-    (onboarding)/           01 welcome · 02 phone · 03 otp · name (new users) · 04 location
+    (onboarding)/           01 welcome · 02 email · 03 otp · name (new users) · 04 location
     (app)/                  Signed-in area (its _layout redirects to /welcome when signed out)
       (tabs)/               Bottom tabs: home (05) · search · saved · profile (08)
       product/[id].tsx      06 product page
@@ -95,9 +102,9 @@ docs/                       Screenshots
 | URL | Screen |
 | --- | --- |
 | `/welcome` | 01 · פתיחה |
-| `/phone` | 02 · התחברות |
+| `/email` | 02 · התחברות (email) |
 | `/otp` | 03 · קוד אימות |
-| `/name` | Name for new users (after the code) |
+| `/name` | Name + WhatsApp number for new users (after the code) |
 | `/location` | 04 · מיקום |
 | `/home` | 05 · בית (פיד) |
 | `/product/:id` | 06 · עמוד מוצר |

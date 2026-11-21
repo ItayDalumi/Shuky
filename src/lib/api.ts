@@ -6,14 +6,14 @@ import type { Availability, Category, CurrentUser, DietaryTag, Listing, Seller }
 import { LISTING_PHOTOS_BUCKET, requireSupabase } from './supabase';
 
 // ---------------------------------------------------------------------------
-// Phone auth
+// Email-code auth (free: no SMS provider needed)
 // ---------------------------------------------------------------------------
 
-/** "050-123-4567" -> "+972501234567" */
-export function toE164IL(phone: string): string {
+/** "050-123-4567" -> "972501234567" (how phones are stored; what wa.me expects) */
+export function toIntlDigitsIL(phone: string): string {
   const digits = phone.replace(/\D/g, '');
-  if (digits.startsWith('972')) return `+${digits}`;
-  return `+972${digits.replace(/^0/, '')}`;
+  if (digits.startsWith('972')) return digits;
+  return `972${digits.replace(/^0/, '')}`;
 }
 
 /** "972501234567" -> "050-123-4567" */
@@ -24,13 +24,17 @@ export function toLocalIL(phone: string | null | undefined): string {
   return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
 }
 
-export async function sendOtp(phone: string) {
-  const { error } = await requireSupabase().auth.signInWithOtp({ phone: toE164IL(phone) });
+/** Emails a one-time code (the "Magic Link" email template must include {{ .Token }}). */
+export async function sendOtp(email: string) {
+  const { error } = await requireSupabase().auth.signInWithOtp({
+    email: email.trim().toLowerCase(),
+    options: { shouldCreateUser: true },
+  });
   if (error) throw error;
 }
 
-export async function verifyOtp(phone: string, token: string) {
-  const { error } = await requireSupabase().auth.verifyOtp({ phone: toE164IL(phone), token, type: 'sms' });
+export async function verifyOtp(email: string, token: string) {
+  const { error } = await requireSupabase().auth.verifyOtp({ email: email.trim().toLowerCase(), token, type: 'email' });
   if (error) throw error;
 }
 
@@ -52,11 +56,12 @@ type ProfileRow = {
   rating_avg: number | null;
 };
 
-function toCurrentUser(row: ProfileRow): CurrentUser {
+function toCurrentUser(row: ProfileRow, email: string): CurrentUser {
   return {
     id: row.id,
     name: row.name,
     community: row.community,
+    email,
     phone: toLocalIL(row.phone),
     xp: row.xp,
     trades: row.trades_count,
@@ -64,23 +69,28 @@ function toCurrentUser(row: ProfileRow): CurrentUser {
   };
 }
 
-export async function fetchMyProfile(userId: string): Promise<CurrentUser | null> {
+export async function fetchMyProfile(userId: string, email: string): Promise<CurrentUser | null> {
   const { data, error } = await requireSupabase()
     .from('profiles')
     .select('id, name, phone, community, xp, trades_count, rating_avg')
     .eq('id', userId)
     .maybeSingle<ProfileRow>();
   if (error) throw error;
-  return data ? toCurrentUser(data) : null;
+  return data ? toCurrentUser(data, email) : null;
 }
 
-export async function createMyProfile(userId: string, name: string) {
-  const { error } = await requireSupabase().from('profiles').insert({ id: userId, name });
+export async function createMyProfile(userId: string, name: string, phone: string) {
+  const { error } = await requireSupabase()
+    .from('profiles')
+    .insert({ id: userId, name, phone: toIntlDigitsIL(phone) });
   if (error) throw error;
 }
 
-export async function updateMyName(userId: string, name: string) {
-  const { error } = await requireSupabase().from('profiles').update({ name }).eq('id', userId);
+export async function updateMyProfile(userId: string, patch: { name?: string; phone?: string }) {
+  const row: { name?: string; phone?: string } = {};
+  if (patch.name) row.name = patch.name;
+  if (patch.phone) row.phone = toIntlDigitsIL(patch.phone);
+  const { error } = await requireSupabase().from('profiles').update(row).eq('id', userId);
   if (error) throw error;
 }
 
@@ -243,7 +253,8 @@ export function errorMessage(error: unknown): string {
   if (/token has expired|invalid.*otp|otp.*invalid|Token has expired or is invalid/i.test(message)) {
     return 'הקוד לא נכון או שפג תוקפו. נסו שוב.';
   }
-  if (/rate limit|too many|security purposes/i.test(message)) return 'יותר מדי ניסיונות. חכו דקה ונסו שוב.';
+  if (/rate limit|too many|security purposes/i.test(message)) return 'יותר מדי ניסיונות. חכו כמה דקות ונסו שוב.';
+  if (/invalid.*email|email.*invalid|unable to validate email/i.test(message)) return 'כתובת המייל לא תקינה.';
   if (/network|fetch/i.test(message)) return 'אין חיבור לאינטרנט. בדקו את החיבור ונסו שוב.';
   if (/payload too large|exceeded the maximum allowed size/i.test(message)) return 'התמונה גדולה מדי. נסו תמונה אחרת.';
   return 'משהו השתבש. נסו שוב בעוד רגע.';

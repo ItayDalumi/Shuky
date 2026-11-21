@@ -4,23 +4,25 @@ import { router } from 'expo-router';
 
 import { AppText, Button, Input, Screen, StepHeader } from '@/components';
 import { errorMessage } from '@/lib/api';
+import { formatPhoneInput, isValidIsraeliMobile } from '@/lib/format';
 import { useAppStore } from '@/store/AppStore';
 import { colors, spacing } from '@/theme';
 
-/** New users pick the name neighbors will see (creates the profile row in live mode). */
+/** New users pick the name neighbors see and the WhatsApp number they order through (creates the profile). */
 export default function NameScreen() {
   const { createProfile } = useAppStore();
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const valid = name.trim().length >= 2;
+  const valid = name.trim().length >= 2 && isValidIsraeliMobile(phone);
 
   const submit = async () => {
     if (!valid || saving) return;
     setSaving(true);
     setError(null);
     try {
-      await createProfile(name);
+      await createProfile(name, phone);
       router.replace('/location');
     } catch (e) {
       setError(errorMessage(e));
@@ -33,7 +35,11 @@ export default function NameScreen() {
     <Screen>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-          <StepHeader title="איך קוראים לך?" subtitle="כך השכנים יראו אותך בשוקי." hideBack />
+          <StepHeader
+            title="נעים להכיר!"
+            subtitle="השם הוא מה שהשכנים יראו. דרך הוואטסאפ הם יזמינו ממך."
+            hideBack
+          />
 
           <Input
             label="שם"
@@ -44,9 +50,20 @@ export default function NameScreen() {
             autoFocus
             autoComplete="name"
             textContentType="name"
+            returnKeyType="next"
+            containerStyle={styles.input}
+          />
+          <Input
+            label="מספר וואטסאפ"
+            placeholder="050-123-4567"
+            value={phone}
+            onChangeText={(t) => setPhone(formatPhoneInput(t))}
+            keyboardType="phone-pad"
+            textContentType="telephoneNumber"
+            autoComplete="tel"
+            ltrValue
             returnKeyType="done"
             onSubmitEditing={submit}
-            containerStyle={styles.input}
           />
           {error ? (
             <AppText variant="small" color={colors.tomatoDark}>

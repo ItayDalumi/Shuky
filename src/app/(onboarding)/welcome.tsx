@@ -52,11 +52,11 @@ export default function WelcomeScreen() {
 
         <View style={styles.spacer} />
 
-        <Button label="בואו נתחיל" onPress={() => router.push('/phone')} />
+        <Button label="בואו נתחיל" onPress={() => router.push('/email')} />
         <Button
           label="כבר יש לי חשבון"
           variant="secondary"
-          onPress={() => router.push({ pathname: '/phone', params: { mode: 'login' } })}
+          onPress={() => router.push({ pathname: '/email', params: { mode: 'login' } })}
         />
       </ScrollView>
     </Screen>

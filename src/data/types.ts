@@ -45,6 +45,9 @@ export type CurrentUser = {
   id: string;
   name: string;
   community: string;
+  /** Sign-in email */
+  email: string;
+  /** WhatsApp number for orders, e.g. "050-123-4567" (entered by the user, not verified) */
   phone: string;
   xp: number;
   trades: number;

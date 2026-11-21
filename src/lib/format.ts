@@ -113,3 +113,7 @@ export function formatDistanceOrNearby(meters: number | null, fromMe = false): s
   if (meters === null) return 'בשכונה';
   return fromMe ? formatDistanceFromMe(meters) : formatDistance(meters);
 }
+
+export function isValidEmail(raw: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw.trim());
+}

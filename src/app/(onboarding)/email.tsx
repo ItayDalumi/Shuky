@@ -4,26 +4,26 @@ import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppText, Button, Input, Screen, StepHeader } from '@/components';
 import { errorMessage } from '@/lib/api';
-import { formatPhoneInput, isValidIsraeliMobile } from '@/lib/format';
+import { isValidEmail } from '@/lib/format';
 import { useAppStore } from '@/store/AppStore';
 import { colors, spacing } from '@/theme';
 
-/** 02 · התחברות. Live mode sends a real SMS code (Supabase phone auth). */
-export default function PhoneScreen() {
+/** 02 · התחברות. Sign in with a one-time code sent by email (free; no SMS provider). */
+export default function EmailScreen() {
   const { mode } = useLocalSearchParams<{ mode?: string }>();
   const { sendOtp } = useAppStore();
-  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const valid = isValidIsraeliMobile(phone);
+  const valid = isValidEmail(email);
 
   const submit = async () => {
     if (!valid || sending) return;
     setSending(true);
     setError(null);
     try {
-      await sendOtp(phone);
-      router.push({ pathname: '/otp', params: { phone, mode: mode ?? 'signup' } });
+      await sendOtp(email);
+      router.push({ pathname: '/otp', params: { email: email.trim().toLowerCase() } });
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -36,18 +36,20 @@ export default function PhoneScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <StepHeader
-            title={mode === 'login' ? 'טוב לראות אותך שוב!' : 'מה מספר הטלפון שלך?'}
-            subtitle="נשלח אליך קוד אימות ב-SMS. בלי סיסמאות, בלי כאב ראש."
+            title={mode === 'login' ? 'טוב לראות אותך שוב!' : 'מה המייל שלך?'}
+            subtitle="נשלח אליך קוד כניסה למייל. בלי סיסמאות, בלי כאב ראש."
           />
 
           <Input
-            label="מספר טלפון"
-            placeholder="050-123-4567"
-            value={phone}
-            onChangeText={(t) => setPhone(formatPhoneInput(t))}
-            keyboardType="phone-pad"
-            textContentType="telephoneNumber"
-            autoComplete="tel"
+            label="מייל"
+            placeholder="name@example.com"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            autoComplete="email"
+            autoCapitalize="none"
+            autoCorrect={false}
             ltrValue
             autoFocus
             returnKeyType="send"

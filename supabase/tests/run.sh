@@ -7,7 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 psql -q -c "drop database if exists shuky_test" -c "create database shuky_test"
 psql -q -d shuky_test -v ON_ERROR_STOP=1 -f tests/supabase_stub.sql
-psql -q -d shuky_test -v ON_ERROR_STOP=1 -f migrations/20261121120000_init.sql
+for f in migrations/*.sql; do psql -q -d shuky_test -v ON_ERROR_STOP=1 -f "$f"; done
 out=$(psql -q -d shuky_test -f tests/rls_test.sql 2>&1)
 echo "$out" | grep -E "PASS|FAIL|ERROR" | sed 's/^psql:[^ ]* NOTICE:  //'
 if echo "$out" | grep -qE "FAIL|ERROR"; then exit 1; fi

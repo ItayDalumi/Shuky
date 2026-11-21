@@ -13,10 +13,17 @@ $$ select set_config('request.jwt.claim.sub', u, false) $$;
 -- ---------- profiles ----------
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
-insert into public.profiles (id, name) values (auth.uid(), 'איתי');
+insert into public.profiles (id, name, phone) values (auth.uid(), 'איתי', '972501111111');
 do $$ begin
-  assert (select phone from public.profiles where id = auth.uid()) = '972501111111', 'phone copied from auth.users';
-  raise notice 'PASS profile created, phone set by server';
+  assert (select phone from public.profiles where id = auth.uid()) = '972501111111', 'phone saved';
+  raise notice 'PASS profile created with WhatsApp phone';
+  begin
+    update public.profiles set phone = '12345' where id = auth.uid();
+    raise exception 'FAIL bad phone accepted';
+  exception when check_violation then raise notice 'PASS phone must be an Israeli mobile (9725XXXXXXXX)'; end;
+  update public.profiles set phone = '972501111112' where id = auth.uid();
+  assert (select phone from public.profiles where id = auth.uid()) = '972501111112', 'phone updated';
+  raise notice 'PASS users can update their own phone';
   begin
     update public.profiles set xp = 999 where id = auth.uid();
     raise exception 'FAIL xp writable';
@@ -30,7 +37,7 @@ update public.profiles set name = 'איתי ד' where id = auth.uid();
 select public.set_my_location(31.37204, 34.81617);
 
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-insert into public.profiles (id, name) values (auth.uid(), 'דנה');
+insert into public.profiles (id, name, phone) values (auth.uid(), 'דנה', '972502222222');
 select public.set_my_location(31.37500, 34.81700);
 do $$ begin
   update public.profiles set name = 'hacked' where id = '00000000-0000-0000-0000-00000000000a';
