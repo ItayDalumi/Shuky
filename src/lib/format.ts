@@ -90,3 +90,15 @@ export function formatCountdown(totalSeconds: number): string {
   const s = totalSeconds % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
+
+/** "עכשיו" / "לפני 20 דק׳" / "לפני שעתיים" / "אתמול" / "לפני 5 ימים" */
+export function relativeTime(iso: string, now: Date = new Date()): string {
+  const minutes = Math.max(0, Math.round((now.getTime() - new Date(iso).getTime()) / 60_000));
+  if (minutes < 1) return 'עכשיו';
+  if (minutes < 60) return `לפני ${minutes} דק׳`;
+  const hours = Math.round(minutes / 60);
+  if (hours === 1) return 'לפני שעה';
+  if (hours === 2) return 'לפני שעתיים';
+  if (hours < 24) return `לפני ${hours} שעות`;
+  return relativeDay(daysAgo(iso, now));
+}

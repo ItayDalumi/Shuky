@@ -14,6 +14,7 @@ export * from './ProductGrid';
 export * from './ProgressBar';
 export * from './SearchField';
 export * from './Screen';
+export * from './ScreenHeader';
 export * from './SectionHeader';
 export * from './SegmentedControl';
 export * from './SelectSheet';

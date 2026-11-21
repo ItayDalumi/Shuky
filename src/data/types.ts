@@ -49,3 +49,23 @@ export type CurrentUser = {
   trades: number;
   rating: number;
 };
+
+export type NotificationKind = 'tradeConfirm' | 'newListing' | 'rating' | 'preorder' | 'level';
+
+export type AppNotification = {
+  id: string;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  createdAt: string;
+  read: boolean;
+  /** Where tapping the notification leads */
+  href?: string;
+};
+
+/** Which push notifications the user wants (Phase 2: stored on the profile, sent via Expo Push). */
+export type NotificationPrefs = {
+  newListings: boolean;
+  orders: boolean;
+  ratings: boolean;
+};

@@ -54,6 +54,8 @@ src/
     product/[id].tsx        06 product page
     listing/new.tsx         07 add listing (modal)
     trade/[id].tsx          09 trade completed
+    notifications.tsx       Notifications list
+    settings.tsx            Settings
   components/               Design-system components (see below)
   theme/tokens.ts           Colors, radii, spacing, fonts, type scale
   data/                     Types, category config, mock data
@@ -77,6 +79,8 @@ docs/                       Screenshots
 | `/profile` | 08 · פרופיל ורמה |
 | `/trade/:id` | 09 · עסקה הושלמה |
 | `/search`, `/saved` | Search and saved tabs (built from the same components) |
+| `/notifications` | Notifications (bell on the home screen) |
+| `/settings` | Settings: profile, notification toggles, privacy, sign out, delete account |
 
 ### Design system
 

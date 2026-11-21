@@ -14,3 +14,9 @@ export function finishOnboarding(router: typeof Router) {
   if (router.canDismiss()) router.dismissAll();
   router.replace('/home');
 }
+
+/** Back to the welcome screen with a clean history. Phase 2: also supabase.auth.signOut(). */
+export function signOut(router: typeof Router) {
+  if (router.canDismiss()) router.dismissAll();
+  router.replace('/welcome');
+}

@@ -32,7 +32,7 @@ export default function ProfileScreen() {
     <Screen edges={['top']}>
       <ScrollView contentContainerStyle={styles.body}>
         <View style={styles.top}>
-          <IconButton icon={Settings} accessibilityLabel="הגדרות" />
+          <IconButton icon={Settings} accessibilityLabel="הגדרות" onPress={() => router.push('/settings')} />
         </View>
 
         <View style={styles.profile}>

@@ -2,7 +2,7 @@
  * Static mock data for Phase 1 (no backend yet).
  * Phase 2 replaces this with Supabase tables: profiles, listings, trades, ratings.
  */
-import type { CurrentUser, Listing, Seller } from './types';
+import type { AppNotification, CurrentUser, Listing, Seller } from './types';
 
 /** ISO date `days` days before now, so "נאפה היום" stays true whenever the app runs. */
 function daysBefore(days: number): string {
@@ -197,5 +197,57 @@ export const initialListings: Listing[] = [
     dietary: ['kosher'],
     sellerId: 'me',
     createdAt: daysBefore(0),
+  },
+];
+
+function minutesAgo(minutes: number): string {
+  return new Date(Date.now() - minutes * 60_000).toISOString();
+}
+
+export const initialNotifications: AppNotification[] = [
+  {
+    id: 'n1',
+    kind: 'tradeConfirm',
+    title: 'רונית סימנה שהעסקה הושלמה',
+    body: 'החלה המתוקה לשבת נמסרה? אשרו גם אתם, ושניכם תקבלו 20 נקודות.',
+    createdAt: minutesAgo(20),
+    read: false,
+    href: '/trade/l3',
+  },
+  {
+    id: 'n2',
+    kind: 'newListing',
+    title: 'דנה העלתה מוצר חדש',
+    body: 'לחם מחמצת כפרי, נאפה הבוקר. 350 מ׳ ממך.',
+    createdAt: minutesAgo(75),
+    read: false,
+    href: '/product/l7',
+  },
+  {
+    id: 'n3',
+    kind: 'rating',
+    title: 'קיבלת דירוג חדש: 5 כוכבים',
+    body: 'יוסי על עוגיות החמאה שלך: ״טעים כמו אצל סבתא״.',
+    createdAt: minutesAgo(60 * 26),
+    read: true,
+    href: '/product/m2',
+  },
+  {
+    id: 'n4',
+    kind: 'preorder',
+    title: 'תזכורת להזמנה מראש',
+    body: 'עוגת הגבינה של מיכל צריכה הזמנה יומיים מראש. רוצים אותה לשישי?',
+    createdAt: minutesAgo(60 * 50),
+    read: true,
+    href: '/product/l2',
+  },
+  {
+    id: 'n5',
+    kind: 'level',
+    title: 'עלית לרמה 3: יוצא מהתנור',
+    body: 'כל הכבוד! עוד 160 נקודות לרמה 4.',
+    createdAt: minutesAgo(60 * 24 * 5),
+    read: true,
+    href: '/profile',
   },
 ];
