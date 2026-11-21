@@ -21,7 +21,7 @@ import { colors, spacing } from '@/theme';
 
 /** 05 · בית (פיד) */
 export default function HomeScreen() {
-  const { user, feed } = useAppStore();
+  const { user, feed, unreadCount } = useAppStore();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('all');
 
@@ -42,7 +42,14 @@ export default function HomeScreen() {
               </AppText>
             </View>
           </View>
-          <IconButton icon={Bell} accessibilityLabel="התראות" size={46} iconSize={22} badge />
+          <IconButton
+            icon={Bell}
+            accessibilityLabel={unreadCount > 0 ? `התראות, ${unreadCount} חדשות` : 'התראות'}
+            size={46}
+            iconSize={22}
+            badge={unreadCount > 0}
+            onPress={() => router.push('/notifications')}
+          />
         </View>
 
         <SearchField value={query} onChangeText={setQuery} />
