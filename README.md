@@ -119,9 +119,9 @@ docs/                       Screenshots
 
 ### Design system
 
-Logo: a home with a fresh cookie and a wisp of steam from the chimney (home-baked, from the
-neighborhood). Source: `docs/brand/logo.svg`; app icons in `assets/` (iOS icon, Android adaptive
-foreground / background / monochrome, splash, favicon).
+Logo: a layered cake slice with a cherry on top, cream and honey on tomato. Source:
+`docs/brand/logo.svg`; app icons in `assets/` (iOS icon, Android adaptive foreground / background /
+monochrome, splash, favicon). An alternative (a house made of cake) is in `docs/brand/`.
 
 Tokens live in `src/theme/tokens.ts` and mirror the Figma file: tomato (primary), leaf (freshness,
 location, success), honey (baked goods, XP), cream background (never pure white), white cards,
