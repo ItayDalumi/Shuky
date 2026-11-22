@@ -1,6 +1,6 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { MapPin, Plus, Settings, Trophy } from 'lucide-react-native';
+import { ChevronLeft, Handshake, MapPin, Plus, Settings, Trophy } from 'lucide-react-native';
 
 import {
   AppText,
@@ -19,7 +19,7 @@ import { border, colors, radius, spacing } from '@/theme';
 
 /** 08 · פרופיל ורמה */
 export default function ProfileScreen() {
-  const { user, myListings } = useAppStore();
+  const { user, myListings, pendingForMe } = useAppStore();
   const level = getLevelInfo(user.xp);
 
   const stats = [
@@ -85,7 +85,32 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        <SectionHeader title="המוצרים שלי" actionLabel="ניהול" />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={pendingForMe > 0 ? `העסקאות שלי, ${pendingForMe} מחכות לאישור שלך` : 'העסקאות שלי'}
+          onPress={() => router.push('/trades')}
+          style={({ pressed }) => [styles.tradesRow, pressed ? { opacity: 0.85 } : null]}
+        >
+          <View style={styles.tradesIcon}>
+            <Handshake size={20} color={colors.leafDark} strokeWidth={2} />
+          </View>
+          <View style={styles.tradesTexts}>
+            <AppText variant="bodyMedium">העסקאות שלי</AppText>
+            <AppText variant="caption" color={colors.muted}>
+              אישורים, דירוגים והיסטוריה
+            </AppText>
+          </View>
+          {pendingForMe > 0 ? (
+            <View style={styles.badge}>
+              <AppText variant="captionMedium" color={colors.white}>
+                {pendingForMe}
+              </AppText>
+            </View>
+          ) : null}
+          <ChevronLeft size={20} color={colors.muted} />
+        </Pressable>
+
+        <SectionHeader title="המוצרים שלי" />
 
         {myListings.length > 0 ? (
           <ProductGrid listings={myListings} />
@@ -136,6 +161,34 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
   },
   stats: { flexDirection: 'row', gap: 10 },
+  tradesRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.sm,
+    backgroundColor: colors.white,
+    borderWidth: border.hairline,
+    borderColor: colors.line,
+    borderRadius: radius.lg,
+  },
+  tradesIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.leafLight,
+  },
+  tradesTexts: { flex: 1, alignItems: 'flex-start', gap: 2 },
+  badge: {
+    minWidth: 22,
+    height: 22,
+    paddingHorizontal: 6,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.tomato,
+  },
   stat: {
     flex: 1,
     gap: 2,

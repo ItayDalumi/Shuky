@@ -36,8 +36,10 @@ export type Listing = {
   noticeDays?: number;
   dietary: DietaryTag[];
   sellerId: string;
-  /** Local or remote photo. Phase 1 falls back to a category illustration. */
+  /** Local or remote photo. Falls back to a category illustration. */
   photoUri?: string;
+  /** Storage path of the photo (live mode), used to replace / delete it */
+  photoPath?: string;
   createdAt: string;
 };
 
@@ -55,7 +57,7 @@ export type CurrentUser = {
   rating: number | null;
 };
 
-export type NotificationKind = 'tradeConfirm' | 'newListing' | 'rating' | 'preorder' | 'level';
+export type NotificationKind = 'tradeConfirm' | 'tradeCompleted' | 'newListing' | 'rating' | 'preorder' | 'level';
 
 export type AppNotification = {
   id: string;
@@ -73,4 +75,23 @@ export type NotificationPrefs = {
   newListings: boolean;
   orders: boolean;
   ratings: boolean;
+};
+
+export type TradeRole = 'buyer' | 'seller';
+
+/** A trade from the current user's point of view (see my_trades() in the database). */
+export type Trade = {
+  id: string;
+  /** null when the listing was deleted */
+  listingId: string | null;
+  listingTitle: string;
+  listingCategory?: Category;
+  role: TradeRole;
+  otherId: string;
+  otherName: string;
+  iConfirmed: boolean;
+  otherConfirmed: boolean;
+  completedAt?: string;
+  createdAt: string;
+  iRated: boolean;
 };

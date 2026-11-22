@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, X } from 'lucide-react-native';
 
@@ -17,7 +17,7 @@ import {
 import { CATEGORIES, CATEGORY_ORDER, DIETARY_LABELS, DIETARY_ORDER, NOTICE_OPTIONS } from '@/data/categories';
 import type { Availability, Category, DietaryTag } from '@/data/types';
 import { errorMessage, type NewPhoto } from '@/lib/api';
-import { AVAILABILITY_LABELS, noticeLabel, relativeDay } from '@/lib/format';
+import { AVAILABILITY_LABELS, daysAgo, noticeLabel, relativeDay } from '@/lib/format';
 import { goBack } from '@/lib/navigation';
 import { useAppStore } from '@/store/AppStore';
 import { colors, radius, spacing } from '@/theme';
@@ -27,21 +27,28 @@ const BAKED_OPTIONS = ['0', '1', '2'] as const;
 type BakedKey = (typeof BAKED_OPTIONS)[number];
 type NoticeKey = `${(typeof NOTICE_OPTIONS)[number]}`;
 
-/** 07 · הוספת מוצר. Live mode uploads the photo to Supabase Storage and inserts into `listings`. */
+/**
+ * 07 · הוספת מוצר, and editing (?edit=<listing id>).
+ * Live mode uploads the photo to Supabase Storage and inserts / updates `listings`.
+ */
 export default function NewListingScreen() {
-  const { addListing } = useAppStore();
+  const { edit } = useLocalSearchParams<{ edit?: string }>();
+  const { addListing, updateListing, getListing } = useAppStore();
+  const editing = edit ? getListing(edit) : undefined;
 
-  const [photoUri, setPhotoUri] = useState<string>();
+  const [photoUri, setPhotoUri] = useState<string | undefined>(editing?.photoUri);
   const [photo, setPhoto] = useState<NewPhoto>();
-  const [category, setCategory] = useState<Category>('cakes');
-  const [title, setTitle] = useState('');
-  const [availability, setAvailability] = useState<Availability>('ready');
-  const [price, setPrice] = useState('');
-  const [bakedDays, setBakedDays] = useState<BakedKey>('0');
-  const [noticeDays, setNoticeDays] = useState<NoticeKey>('2');
-  const [unit, setUnit] = useState('');
-  const [dietary, setDietary] = useState<DietaryTag[]>(['kosher']);
-  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState<Category>(editing?.category ?? 'cakes');
+  const [title, setTitle] = useState(editing?.title ?? '');
+  const [availability, setAvailability] = useState<Availability>(editing?.availability ?? 'ready');
+  const [price, setPrice] = useState(editing ? String(editing.price) : '');
+  const [bakedDays, setBakedDays] = useState<BakedKey>(
+    editing?.bakedAt ? (`${Math.min(2, daysAgo(editing.bakedAt))}` as BakedKey) : '0',
+  );
+  const [noticeDays, setNoticeDays] = useState<NoticeKey>(editing?.noticeDays ? (`${editing.noticeDays}` as NoticeKey) : '2');
+  const [unit, setUnit] = useState(editing?.unit ?? '');
+  const [dietary, setDietary] = useState<DietaryTag[]>(editing?.dietary ?? ['kosher']);
+  const [description, setDescription] = useState(editing?.description ?? '');
   const [sheet, setSheet] = useState<'baked' | 'notice' | null>(null);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +81,7 @@ export default function NewListingScreen() {
     setPublishing(true);
     setError(null);
     try {
-      const id = await addListing({
+      const input = {
         title: title.trim(),
         category,
         price: priceNumber,
@@ -86,8 +93,14 @@ export default function NewListingScreen() {
         dietary: DIETARY_ORDER.filter((t) => dietary.includes(t)),
         photo,
         localPhotoUri: photoUri,
-      });
-      router.replace(`/product/${id}`);
+      };
+      if (editing) {
+        await updateListing(editing.id, input);
+        goBack(router, `/product/${editing.id}`);
+      } else {
+        const id = await addListing(input);
+        router.replace(`/product/${id}`);
+      }
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -101,7 +114,7 @@ export default function NewListingScreen() {
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
             <AppText variant="heading" accessibilityRole="header">
-              מוצר חדש
+              {editing ? 'עריכת מוצר' : 'מוצר חדש'}
             </AppText>
             <IconButton icon={X} accessibilityLabel="סגירה" onPress={() => goBack(router, '/home')} />
           </View>
@@ -239,7 +252,12 @@ export default function NewListingScreen() {
               {error}
             </AppText>
           ) : null}
-          <Button label="פרסום המוצר" onPress={publish} disabled={!canPublish} loading={publishing} />
+          <Button
+            label={editing ? 'שמירת השינויים' : 'פרסום המוצר'}
+            onPress={publish}
+            disabled={!canPublish}
+            loading={publishing}
+          />
         </ScrollView>
       </KeyboardAvoidingView>
 

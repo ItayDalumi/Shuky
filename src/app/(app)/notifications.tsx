@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
-import { Bell, CakeSlice, CalendarClock, Handshake, Star, Trophy, type LucideIcon } from 'lucide-react-native';
+import { Bell, CakeSlice, CalendarClock, CircleCheck, Handshake, Star, Trophy, type LucideIcon } from 'lucide-react-native';
 
 import { AppText, EmptyState, Screen, ScreenHeader } from '@/components';
 import type { AppNotification, NotificationKind } from '@/data/types';
@@ -10,15 +11,21 @@ import { border, colors, radius, spacing } from '@/theme';
 
 const KIND_STYLE: Record<NotificationKind, { Icon: LucideIcon; color: string; background: string }> = {
   tradeConfirm: { Icon: Handshake, color: colors.leafDark, background: colors.leafLight },
+  tradeCompleted: { Icon: CircleCheck, color: colors.leafDark, background: colors.leafLight },
   newListing: { Icon: CakeSlice, color: colors.tomatoDark, background: colors.tomatoLight },
   rating: { Icon: Star, color: colors.honeyDark, background: colors.honeyLight },
   preorder: { Icon: CalendarClock, color: colors.honeyDark, background: colors.honeyLight },
   level: { Icon: Trophy, color: colors.honeyDark, background: colors.honeyLight },
 };
 
-/** התראות. Phase 2: stored per user in Supabase and delivered as push notifications. */
+/** התראות. Live: created by the server (trades, ratings, new bakes nearby, level-ups). */
 export default function NotificationsScreen() {
-  const { notifications, unreadCount, markNotificationRead, markAllNotificationsRead } = useAppStore();
+  const { notifications, unreadCount, markNotificationRead, markAllNotificationsRead, refreshNotifications } =
+    useAppStore();
+
+  useEffect(() => {
+    refreshNotifications().catch(() => {});
+  }, [refreshNotifications]);
 
   const open = (n: AppNotification) => {
     markNotificationRead(n.id);

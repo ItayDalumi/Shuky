@@ -22,7 +22,7 @@ import { colors, spacing } from '@/theme';
 
 /** 05 · בית (פיד) */
 export default function HomeScreen() {
-  const { user, feed, unreadCount, feedLoading, feedError, refreshFeed } = useAppStore();
+  const { user, feed, unreadCount, feedLoading, feedError, refreshAll } = useAppStore();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('all');
 
@@ -33,7 +33,7 @@ export default function HomeScreen() {
       <ScrollView
         contentContainerStyle={styles.body}
         keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={feedLoading && feed.length > 0} onRefresh={refreshFeed} tintColor={colors.tomato} />}
+        refreshControl={<RefreshControl refreshing={feedLoading && feed.length > 0} onRefresh={refreshAll} tintColor={colors.tomato} />}
       >
         <View style={styles.header}>
           <View style={styles.greeting}>

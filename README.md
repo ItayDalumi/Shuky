@@ -7,8 +7,10 @@
 levels front and center. Items are either ready now or baked to order (pre-order). Launch community:
 Lehavim. The app is mobile-first (iOS / Android), and the whole UI is Hebrew, right-to-left.
 
-> **Status: Phase 2.** Supabase backend: sign-in with an email code, profiles, location (rounded),
-> listings with photos. Only free tools. Without a `.env` the app runs in **demo mode** on mock data.
+> **Status: Phase 3.** Supabase backend: sign-in with an email code, profiles, rounded location,
+> listings with photos (edit / delete), trades confirmed by both sides with XP and levels, ratings,
+> saved items and server notifications. Only free tools. Without a `.env` the app runs in **demo
+> mode** on mock data.
 
 ![The 9 Phase 1 screens](docs/phase-1-screens.png)
 
@@ -44,8 +46,9 @@ so new users enter one on the name screen (it isn't verified).
 
 1. Create a project at [supabase.com](https://supabase.com) (region: Frankfurt is closest to Israel).
 2. **SQL Editor** → run each file in `supabase/migrations/` **in order** (paste → **Run**):
-   `20261121120000_init.sql`, then `20261122090000_email_auth.sql`. This creates the tables, the
-   security rules (RLS), the feed / trade / delete-account functions and the `listing-photos` bucket.
+   `20261121120000_init.sql`, `20261122090000_email_auth.sql`, then `20261122140000_phase3.sql`.
+   This creates the tables, the security rules (RLS), the feed / trade / rating / notification
+   functions and the `listing-photos` bucket.
 3. **Email code** (free; the Email provider is on by default):
    **Authentication → Emails → Templates → Magic Link**: set the body to show the code, e.g.
    `<h2>הקוד שלך לשוקי</h2><p style="font-size:28px">{{ .Token }}</p>` and subject `הקוד שלך לשוקי`.
@@ -82,7 +85,8 @@ src/
       (tabs)/               Bottom tabs: home (05) · search · saved · profile (08)
       product/[id].tsx      06 product page
       listing/new.tsx       07 add listing (modal)
-      trade/[id].tsx        09 trade completed
+      trade/[id].tsx        09 trade: confirm, waiting, completed + rating
+      trades.tsx            My trades
       notifications.tsx     Notifications list
       settings.tsx          Settings
   components/               Design-system components (see below)
@@ -112,8 +116,9 @@ docs/                       Screenshots
 | `/product/:id` | 06 · עמוד מוצר |
 | `/listing/new` | 07 · הוספת מוצר (opened by the + button) |
 | `/profile` | 08 · פרופיל ורמה |
-| `/trade/:id` | 09 · עסקה הושלמה |
+| `/trade/:id` | 09 · Trade: confirm / waiting / completed (+XP, rating) |
 | `/search`, `/saved` | Search and saved tabs (built from the same components) |
+| `/trades` | העסקאות שלי: waiting for me, waiting for the other side, completed |
 | `/notifications` | Notifications (bell on the home screen) |
 | `/settings` | Settings: profile, notification toggles, privacy, sign out, delete account |
 
@@ -150,14 +155,16 @@ Icons are [Lucide](https://lucide.dev) (`lucide-react-native`), the same line st
 - **Distances are always rounded**, never an exact location. The phone rounds the position, the
   database snaps it to a ~100 m grid, no user can read another user's point, and the feed
   (`nearby_listings()`) returns only a distance rounded to 50 m. The app shows "350 מ׳ ממך".
-- **XP is awarded only when both sides confirm a trade.** Enforced in the database by
-  `confirm_trade()` (each side +20 XP, once). `src/lib/levels.ts` mirrors the level ladder. The app
-  wires the confirmation flow in Phase 3; the trade-completed screen is still a demo preview.
+- **XP is awarded only when both sides confirm a trade.** The buyer taps "קניתי את זה" on the
+  product page, the seller confirms (from the notification or "העסקאות שלי"), and only then does
+  `confirm_trade()` give each side +20 XP, once. Either side can cancel a pending trade. After a
+  completed trade each side can rate the other once (1–5 stars); the seller's average updates.
 
 ## Roadmap
 
-- **Phase 2 (done):** Supabase schema (`profiles`, `profile_locations`, `listings`, `trades`,
-  `ratings`) with RLS, phone OTP auth, name step, location via `expo-location`, PostGIS feed with
-  rounded distances, photo upload to Storage, delete account.
-- **Phase 3:** in-app trade confirmation (both sides) and XP, ratings UI, saved items and
-  notifications on the server, push notifications, editing / removing your own listings.
+- **Phase 2 (done):** Supabase schema with RLS, email-code sign-in, name + WhatsApp step, location
+  via `expo-location`, PostGIS feed with rounded distances, photo upload to Storage, delete account.
+- **Phase 3 (done):** trade confirmation by both sides with XP and level-ups, ratings, saved items
+  and notifications on the server (created by triggers, respecting preferences), edit / delete
+  your own listings.
+- **Next:** push notifications (Expo push, free), privacy policy / terms pages, store builds (EAS).
