@@ -76,6 +76,18 @@ Service, straight from the database (`pg_net`, enabled by the push migration). N
 
 In demo mode the phone shows a local notification when a demo trade completes.
 
+## Privacy policy & terms
+
+One source, `src/content/legal.ts`, feeds both:
+- the in-app screens `/legal/privacy` and `/legal/terms` (linked from the sign-up screen and Settings);
+- public pages for the store listings: `npm run legal:export` writes `docs/privacy.html`,
+  `docs/terms.html` and `docs/index.html`.
+
+Host them for free with GitHub Pages: repo **Settings → Pages → Deploy from a branch → `main` /
+`docs`**. The URLs become `https://itaydalumi.github.io/Shuky/privacy.html` and `.../terms.html`.
+Before launch: set `OPERATOR_NAME` and `CONTACT_EMAIL` in `src/content/legal.ts`, re-run the export,
+and have the text reviewed by a lawyer.
+
 The database tests in `supabase/tests` check the security rules against a local Postgres + PostGIS
 (see `supabase/tests/run.sh`).
 
@@ -185,4 +197,5 @@ Icons are [Lucide](https://lucide.dev) (`lucide-react-native`), the same line st
   and notifications on the server (created by triggers, respecting preferences), edit / delete
   your own listings.
 - **Push notifications (done):** Expo Push Service from the database, device registration, tap to open.
-- **Next:** privacy policy / terms pages, store builds (EAS).
+- **Privacy policy & terms (done):** in-app screens + public pages for the stores.
+- **Next:** store builds (EAS), store listings.
