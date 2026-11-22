@@ -8,7 +8,7 @@ import { ProductCard } from './ProductCard';
 
 /** Two-column grid of product cards (fills right to left). */
 export function ProductGrid({ listings }: { listings: Listing[] }) {
-  const { getSeller } = useAppStore();
+  const { getSeller, user } = useAppStore();
 
   const rows: Listing[][] = [];
   for (let i = 0; i < listings.length; i += 2) rows.push(listings.slice(i, i + 2));
@@ -22,6 +22,7 @@ export function ProductGrid({ listings }: { listings: Listing[] }) {
               key={listing.id}
               listing={listing}
               seller={getSeller(listing.sellerId)}
+              isMine={listing.sellerId === user.id}
               onPress={() => router.push(`/product/${listing.id}`)}
             />
           ))}

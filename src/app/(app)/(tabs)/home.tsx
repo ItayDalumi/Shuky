@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { Bell, MapPin, Search } from 'lucide-react-native';
+import { Bell, CakeSlice, MapPin, Search } from 'lucide-react-native';
 
 import {
   AppText,
+  Button,
   CategoryChips,
   EmptyState,
   IconButton,
@@ -21,7 +22,7 @@ import { colors, spacing } from '@/theme';
 
 /** 05 · בית (פיד) */
 export default function HomeScreen() {
-  const { user, feed, unreadCount } = useAppStore();
+  const { user, feed, unreadCount, feedLoading, feedError, refreshFeed } = useAppStore();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('all');
 
@@ -29,7 +30,11 @@ export default function HomeScreen() {
 
   return (
     <Screen edges={['top']}>
-      <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.body}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={feedLoading && feed.length > 0} onRefresh={refreshFeed} tintColor={colors.tomato} />}
+      >
         <View style={styles.header}>
           <View style={styles.greeting}>
             <AppText variant="heading" accessibilityRole="header">
@@ -58,8 +63,23 @@ export default function HomeScreen() {
 
         <SectionHeader title="טרי מהתנור" actionLabel="לכל המוצרים" onActionPress={() => router.navigate('/search')} />
 
-        {listings.length > 0 ? (
+        {feedError ? (
+          <AppText variant="small" color={colors.tomatoDark} center>
+            {feedError}
+          </AppText>
+        ) : null}
+
+        {feedLoading && feed.length === 0 ? (
+          <ActivityIndicator color={colors.tomato} style={styles.loading} />
+        ) : listings.length > 0 ? (
           <ProductGrid listings={listings} />
+        ) : feed.length === 0 ? (
+          <EmptyState
+            icon={CakeSlice}
+            title="עוד אין מאפים בשכונה"
+            message="אופים משהו בבית? תהיו הראשונים לפרסם"
+            action={<Button label="הוספת מוצר" onPress={() => router.push('/listing/new')} />}
+          />
         ) : (
           <EmptyState
             icon={Search}
@@ -86,4 +106,5 @@ const styles = StyleSheet.create({
   },
   greeting: { alignItems: 'flex-start', gap: 2 },
   location: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  loading: { marginTop: spacing.xxl },
 });

@@ -9,14 +9,15 @@ export function goBack(router: typeof Router, fallback: Href) {
   }
 }
 
-/** Leave onboarding for the main app without keeping the onboarding screens in history. */
+/**
+ * Leave onboarding for the main app. The (onboarding) and (app) groups are separate entries of the
+ * root stack, so replacing swaps the whole onboarding stack out of history.
+ */
 export function finishOnboarding(router: typeof Router) {
-  if (router.canDismiss()) router.dismissAll();
   router.replace('/home');
 }
 
-/** Back to the welcome screen with a clean history. Phase 2: also supabase.auth.signOut(). */
-export function signOut(router: typeof Router) {
-  if (router.canDismiss()) router.dismissAll();
+/** Back to the welcome screen with a clean history (after signing out or deleting the account). */
+export function resetToWelcome(router: typeof Router) {
   router.replace('/welcome');
 }

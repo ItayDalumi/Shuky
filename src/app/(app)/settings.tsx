@@ -2,12 +2,14 @@ import { useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
-import { Bell, CakeSlice, Lock, LogOut, MapPin, Phone, Star, Trash2, type LucideIcon } from 'lucide-react-native';
+import { Bell, CakeSlice, Lock, LogOut, Mail, MapPin, Star, Trash2, type LucideIcon } from 'lucide-react-native';
 
 import { AppText, Input, Screen, ScreenHeader } from '@/components';
 import type { NotificationPrefs } from '@/data/types';
 import { confirmAction } from '@/lib/confirm';
-import { signOut } from '@/lib/navigation';
+import { errorMessage } from '@/lib/api';
+import { formatPhoneInput, isValidIsraeliMobile } from '@/lib/format';
+import { resetToWelcome } from '@/lib/navigation';
 import { ltr } from '@/lib/rtl';
 import { useAppStore } from '@/store/AppStore';
 import { border, colors, radius, spacing } from '@/theme';
@@ -18,15 +20,46 @@ const NOTIFICATION_ROWS: { key: keyof NotificationPrefs; icon: LucideIcon; label
   { key: 'ratings', icon: Star, label: 'דירוגים ורמות', hint: 'כשמדרגים אותך או כשעולים רמה' },
 ];
 
-/** הגדרות. Phase 2: profile and preferences are saved in Supabase; delete-account removes the user's data. */
+/** הגדרות. In live mode the name, sign out and delete account go to Supabase; toggles are still local (Phase 3). */
 export default function SettingsScreen() {
-  const { user, updateUser, notificationPrefs, setNotificationPref } = useAppStore();
+  const { user, updateUser, signOut, deleteAccount, notificationPrefs, setNotificationPref } = useAppStore();
   const [name, setName] = useState(user.name);
+  const [phone, setPhone] = useState(user.phone);
+  const [error, setError] = useState<string | null>(null);
 
-  const saveName = () => {
+  const saveName = async () => {
     const trimmed = name.trim();
-    if (trimmed.length >= 2) updateUser({ name: trimmed });
-    else setName(user.name);
+    if (trimmed === user.name) return;
+    if (trimmed.length < 2) return setName(user.name);
+    try {
+      setError(null);
+      await updateUser({ name: trimmed });
+    } catch (e) {
+      setError(errorMessage(e));
+      setName(user.name);
+    }
+  };
+
+  const savePhone = async () => {
+    if (phone === user.phone) return;
+    if (!isValidIsraeliMobile(phone)) return setPhone(user.phone);
+    try {
+      setError(null);
+      await updateUser({ phone });
+    } catch (e) {
+      setError(errorMessage(e));
+      setPhone(user.phone);
+    }
+  };
+
+  const run = async (action: () => Promise<void>) => {
+    try {
+      setError(null);
+      await action();
+      resetToWelcome(router);
+    } catch (e) {
+      setError(errorMessage(e));
+    }
   };
 
   const onSignOut = () =>
@@ -34,7 +67,7 @@ export default function SettingsScreen() {
       title: 'להתנתק מהחשבון?',
       message: 'אפשר להתחבר שוב בכל רגע עם מספר הטלפון שלך.',
       confirmLabel: 'התנתקות',
-      onConfirm: () => signOut(router),
+      onConfirm: () => run(signOut),
     });
 
   const onDeleteAccount = () =>
@@ -43,8 +76,8 @@ export default function SettingsScreen() {
       message: 'כל המוצרים, הדירוגים והנקודות שלך יימחקו לצמיתות. אי אפשר לבטל את הפעולה.',
       confirmLabel: 'מחיקה',
       destructive: true,
-      // Phase 2: call a Supabase function that deletes the user and their data, then sign out.
-      onConfirm: () => signOut(router),
+      // Live: removes photos, then delete_my_account() deletes the user (data cascades).
+      onConfirm: () => run(deleteAccount),
     });
 
   const version = Constants.expoConfig?.version ?? '1.0.0';
@@ -54,6 +87,11 @@ export default function SettingsScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <ScreenHeader title="הגדרות" fallback="/profile" />
+          {error ? (
+            <AppText variant="small" color={colors.tomatoDark}>
+              {error}
+            </AppText>
+          ) : null}
 
           <Section title="הפרופיל שלי">
             <View style={styles.padded}>
@@ -67,9 +105,20 @@ export default function SettingsScreen() {
                 returnKeyType="done"
                 autoComplete="name"
               />
+              <Input
+                label="מספר וואטסאפ"
+                value={phone}
+                onChangeText={(t) => setPhone(formatPhoneInput(t))}
+                onBlur={savePhone}
+                onSubmitEditing={savePhone}
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                ltrValue
+                returnKeyType="done"
+              />
             </View>
             <Row icon={MapPin} label="יישוב" value={user.community} hint="כרגע שוקי פעיל רק בלהבים" />
-            <Row icon={Phone} label="טלפון" value={ltr(user.phone)} last />
+            <Row icon={Mail} label="מייל" value={ltr(user.email)} hint="משמש רק לקוד הכניסה" last />
           </Section>
 
           <Section title="התראות">
@@ -159,7 +208,7 @@ function Row({ icon: Icon, label, value, hint, trailing, onPress, danger, iconCo
         ) : null}
       </View>
       {value ? (
-        <AppText variant="body" color={colors.muted}>
+        <AppText variant="body" color={colors.muted} numberOfLines={1} style={styles.rowValue}>
           {value}
         </AppText>
       ) : null}
@@ -198,7 +247,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     borderRadius: radius.xl,
   },
-  padded: { padding: spacing.md, paddingBottom: spacing.xs },
+  padded: { padding: spacing.md, paddingBottom: spacing.xs, gap: spacing.sm },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -209,4 +258,5 @@ const styles = StyleSheet.create({
   },
   rowDivider: { borderBottomWidth: border.hairline, borderBottomColor: colors.line },
   rowTexts: { flex: 1, alignItems: 'flex-start', gap: 2 },
+  rowValue: { flexShrink: 1, maxWidth: '55%' },
 });

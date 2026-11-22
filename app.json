@@ -15,7 +15,7 @@
     "android": {
       "package": "com.shuky.app",
       "adaptiveIcon": {
-        "backgroundColor": "#FFF8EE",
+        "backgroundColor": "#E85D3F",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -59,6 +59,12 @@
         {
           "photosPermission": "כדי להעלות תמונה של המוצר שלך",
           "cameraPermission": "כדי לצלם את המוצר שלך"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "כדי להציג מאפים בסביבה. השכנים יראו רק מרחק משוער, אף פעם לא את הכתובת שלך."
         }
       ]
     ]

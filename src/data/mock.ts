@@ -17,6 +17,7 @@ export const currentUser: CurrentUser = {
   id: 'me',
   name: 'איתי',
   community: COMMUNITY,
+  email: 'itai@example.com',
   phone: '050-123-4567',
   xp: 340,
   trades: 12,

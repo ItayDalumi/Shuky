@@ -9,11 +9,12 @@ export type DietaryTag = 'kosher' | 'parve' | 'glutenFree' | 'vegan' | 'nutFree'
 export type Seller = {
   id: string;
   name: string;
-  /** Approximate distance from the current user in meters (Phase 2: PostGIS, rounded) */
-  distanceMeters: number;
+  /** Rounded distance from the current user in meters; null when either side shared no location */
+  distanceMeters: number | null;
   level: number;
   trades: number;
-  rating: number;
+  /** null until the first rating */
+  rating: number | null;
   /** Used only to build the wa.me deep link */
   whatsapp: string;
 };
@@ -44,10 +45,14 @@ export type CurrentUser = {
   id: string;
   name: string;
   community: string;
+  /** Sign-in email */
+  email: string;
+  /** WhatsApp number for orders, e.g. "050-123-4567" (entered by the user, not verified) */
   phone: string;
   xp: number;
   trades: number;
-  rating: number;
+  /** null until the first rating */
+  rating: number | null;
 };
 
 export type NotificationKind = 'tradeConfirm' | 'newListing' | 'rating' | 'preorder' | 'level';

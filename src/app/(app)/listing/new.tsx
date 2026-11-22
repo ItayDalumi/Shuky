@@ -16,6 +16,7 @@ import {
 } from '@/components';
 import { CATEGORIES, CATEGORY_ORDER, DIETARY_LABELS, DIETARY_ORDER, NOTICE_OPTIONS } from '@/data/categories';
 import type { Availability, Category, DietaryTag } from '@/data/types';
+import { errorMessage, type NewPhoto } from '@/lib/api';
 import { AVAILABILITY_LABELS, noticeLabel, relativeDay } from '@/lib/format';
 import { goBack } from '@/lib/navigation';
 import { useAppStore } from '@/store/AppStore';
@@ -26,11 +27,12 @@ const BAKED_OPTIONS = ['0', '1', '2'] as const;
 type BakedKey = (typeof BAKED_OPTIONS)[number];
 type NoticeKey = `${(typeof NOTICE_OPTIONS)[number]}`;
 
-/** 07 · הוספת מוצר. Phase 2: upload the photo to Supabase Storage and insert into `listings`. */
+/** 07 · הוספת מוצר. Live mode uploads the photo to Supabase Storage and inserts into `listings`. */
 export default function NewListingScreen() {
   const { addListing } = useAppStore();
 
   const [photoUri, setPhotoUri] = useState<string>();
+  const [photo, setPhoto] = useState<NewPhoto>();
   const [category, setCategory] = useState<Category>('cakes');
   const [title, setTitle] = useState('');
   const [availability, setAvailability] = useState<Availability>('ready');
@@ -41,6 +43,8 @@ export default function NewListingScreen() {
   const [dietary, setDietary] = useState<DietaryTag[]>(['kosher']);
   const [description, setDescription] = useState('');
   const [sheet, setSheet] = useState<'baked' | 'notice' | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const preorder = availability === 'preorder';
   const priceNumber = Number(price);
@@ -54,28 +58,41 @@ export default function NewListingScreen() {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.8,
+      quality: 0.6,
+      base64: true,
     });
-    if (!result.canceled && result.assets[0]) setPhotoUri(result.assets[0].uri);
+    const asset = result.canceled ? undefined : result.assets[0];
+    if (!asset) return;
+    setPhotoUri(asset.uri);
+    setPhoto(asset.base64 ? { base64: asset.base64, mimeType: asset.mimeType ?? 'image/jpeg' } : undefined);
   };
 
-  const publish = () => {
-    if (!canPublish) return;
+  const publish = async () => {
+    if (!canPublish || publishing) return;
     const bakedAt = new Date();
     bakedAt.setDate(bakedAt.getDate() - Number(bakedDays));
-    const listing = addListing({
-      title: title.trim(),
-      category,
-      price: priceNumber,
-      unit: unit.trim() || undefined,
-      description: description.trim(),
-      availability,
-      bakedAt: preorder ? undefined : bakedAt.toISOString(),
-      noticeDays: preorder ? Number(noticeDays) : undefined,
-      dietary: DIETARY_ORDER.filter((t) => dietary.includes(t)),
-      photoUri,
-    });
-    router.replace(`/product/${listing.id}`);
+    setPublishing(true);
+    setError(null);
+    try {
+      const id = await addListing({
+        title: title.trim(),
+        category,
+        price: priceNumber,
+        unit: unit.trim() || undefined,
+        description: description.trim(),
+        availability,
+        bakedAt: preorder ? undefined : bakedAt.toISOString(),
+        noticeDays: preorder ? Number(noticeDays) : undefined,
+        dietary: DIETARY_ORDER.filter((t) => dietary.includes(t)),
+        photo,
+        localPhotoUri: photoUri,
+      });
+      router.replace(`/product/${id}`);
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setPublishing(false);
+    }
   };
 
   return (
@@ -217,7 +234,12 @@ export default function NewListingScreen() {
 
           <View style={styles.spacer} />
 
-          <Button label="פרסום המוצר" onPress={publish} disabled={!canPublish} />
+          {error ? (
+            <AppText variant="small" color={colors.tomatoDark} center>
+              {error}
+            </AppText>
+          ) : null}
+          <Button label="פרסום המוצר" onPress={publish} disabled={!canPublish} loading={publishing} />
         </ScrollView>
       </KeyboardAvoidingView>
 

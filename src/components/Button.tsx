@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { border, colors, radius, spacing } from '@/theme';
 import { AppText } from './AppText';
@@ -13,6 +13,8 @@ export type ButtonProps = {
   /** Rendered at the start (right in RTL) of the label, e.g. the WhatsApp glyph */
   icon?: ReactNode;
   disabled?: boolean;
+  /** Shows a spinner and blocks presses while an async action runs */
+  loading?: boolean;
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
 };
@@ -26,29 +28,43 @@ const VARIANTS: Record<ButtonVariant, { container: ViewStyle; text: string }> = 
   leaf: { container: { backgroundColor: colors.leaf }, text: colors.white },
 };
 
-export function Button({ label, onPress, variant = 'primary', icon, disabled, style, accessibilityLabel }: ButtonProps) {
+export function Button({
+  label,
+  onPress,
+  variant = 'primary',
+  icon,
+  disabled,
+  loading,
+  style,
+  accessibilityLabel,
+}: ButtonProps) {
   const v = VARIANTS[variant];
+  const blocked = disabled || loading;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled: !!disabled }}
-      disabled={disabled}
+      accessibilityState={{ disabled: !!blocked, busy: !!loading }}
+      disabled={blocked}
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
         v.container,
-        pressed && !disabled ? styles.pressed : null,
-        disabled ? styles.disabled : null,
+        pressed && !blocked ? styles.pressed : null,
+        disabled && !loading ? styles.disabled : null,
         style,
       ]}
     >
-      <View style={styles.content}>
-        {icon}
-        <AppText variant="button" color={v.text} numberOfLines={1}>
-          {label}
-        </AppText>
-      </View>
+      {loading ? (
+        <ActivityIndicator color={v.text} />
+      ) : (
+        <View style={styles.content}>
+          {icon}
+          <AppText variant="button" color={v.text} numberOfLines={1}>
+            {label}
+          </AppText>
+        </View>
+      )}
     </Pressable>
   );
 }
