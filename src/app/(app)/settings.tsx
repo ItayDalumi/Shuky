@@ -2,7 +2,21 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
-import { Bell, BellOff, BellRing, CakeSlice, Lock, LogOut, Mail, MapPin, Star, Trash2, type LucideIcon } from 'lucide-react-native';
+import {
+  Bell,
+  BellOff,
+  BellRing,
+  CakeSlice,
+  FileText,
+  Lock,
+  LogOut,
+  Mail,
+  MapPin,
+  ShieldCheck,
+  Star,
+  Trash2,
+  type LucideIcon,
+} from 'lucide-react-native';
 
 import { AppText, Input, Screen, ScreenHeader } from '@/components';
 import type { NotificationPrefs } from '@/data/types';
@@ -174,6 +188,11 @@ export default function SettingsScreen() {
               hint="השכנים רואים רק מרחק משוער, אף פעם לא את הכתובת שלך."
               last
             />
+          </Section>
+
+          <Section title="מידע">
+            <Row icon={ShieldCheck} label="מדיניות פרטיות" onPress={() => router.push('/legal/privacy')} />
+            <Row icon={FileText} label="תנאי שימוש" onPress={() => router.push('/legal/terms')} last />
           </Section>
 
           <Section title="חשבון">

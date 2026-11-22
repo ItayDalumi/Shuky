@@ -65,7 +65,26 @@ export default function EmailScreen() {
           <View style={styles.spacer} />
 
           <AppText variant="caption" color={colors.muted} center>
-            בלחיצה על המשך את/ה מאשר/ת את תנאי השימוש ומדיניות הפרטיות
+            {'בלחיצה על המשך את/ה מאשר/ת את '}
+            <AppText
+              variant="caption"
+              color={colors.tomato}
+              accessibilityRole="link"
+              onPress={() => router.push('/legal/terms')}
+              style={styles.link}
+            >
+              תנאי השימוש
+            </AppText>
+            {' ואת '}
+            <AppText
+              variant="caption"
+              color={colors.tomato}
+              accessibilityRole="link"
+              onPress={() => router.push('/legal/privacy')}
+              style={styles.link}
+            >
+              מדיניות הפרטיות
+            </AppText>
           </AppText>
           <Button label="שלחו לי קוד" onPress={submit} disabled={!valid} loading={sending} />
         </ScrollView>
@@ -85,4 +104,5 @@ const styles = StyleSheet.create({
   },
   input: { marginTop: spacing.lg },
   spacer: { flexGrow: 1, minHeight: spacing.xl },
+  link: { textDecorationLine: 'underline' },
 });

@@ -41,7 +41,8 @@
     "web": "expo start --web",
     "build:web": "expo export --platform web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "legal:export": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/export-legal.mjs"
   },
   "private": true
 }
