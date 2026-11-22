@@ -19,5 +19,7 @@ export * from './SectionHeader';
 export * from './SegmentedControl';
 export * from './SelectSheet';
 export * from './SellerCard';
+export * from './StarRating';
 export * from './StepHeader';
+export * from './TradeRow';
 export * from './WhatsAppIcon';

@@ -2,7 +2,18 @@
  * Live-mode data access (Supabase). Schema: supabase/migrations.
  * Every function here assumes isSupabaseConfigured === true.
  */
-import type { Availability, Category, CurrentUser, DietaryTag, Listing, Seller } from '@/data/types';
+import type {
+  AppNotification,
+  Availability,
+  Category,
+  CurrentUser,
+  DietaryTag,
+  Listing,
+  NotificationKind,
+  NotificationPrefs,
+  Seller,
+  Trade,
+} from '@/data/types';
 import { LISTING_PHOTOS_BUCKET, requireSupabase } from './supabase';
 
 // ---------------------------------------------------------------------------
@@ -54,7 +65,10 @@ type ProfileRow = {
   xp: number;
   trades_count: number;
   rating_avg: number | null;
+  notification_prefs: NotificationPrefs | null;
 };
+
+const DEFAULT_PREFS: NotificationPrefs = { newListings: true, orders: true, ratings: true };
 
 function toCurrentUser(row: ProfileRow, email: string): CurrentUser {
   return {
@@ -69,14 +83,23 @@ function toCurrentUser(row: ProfileRow, email: string): CurrentUser {
   };
 }
 
-export async function fetchMyProfile(userId: string, email: string): Promise<CurrentUser | null> {
+export async function fetchMyProfile(
+  userId: string,
+  email: string,
+): Promise<{ user: CurrentUser; prefs: NotificationPrefs } | null> {
   const { data, error } = await requireSupabase()
     .from('profiles')
-    .select('id, name, phone, community, xp, trades_count, rating_avg')
+    .select('id, name, phone, community, xp, trades_count, rating_avg, notification_prefs')
     .eq('id', userId)
     .maybeSingle<ProfileRow>();
   if (error) throw error;
-  return data ? toCurrentUser(data, email) : null;
+  if (!data) return null;
+  return { user: toCurrentUser(data, email), prefs: { ...DEFAULT_PREFS, ...(data.notification_prefs ?? {}) } };
+}
+
+export async function updateNotificationPrefs(userId: string, prefs: NotificationPrefs) {
+  const { error } = await requireSupabase().from('profiles').update({ notification_prefs: prefs }).eq('id', userId);
+  if (error) throw error;
 }
 
 export async function createMyProfile(userId: string, name: string, phone: string) {
@@ -175,6 +198,7 @@ export async function fetchFeed(): Promise<{ listings: Listing[]; sellers: Selle
       dietary: r.dietary,
       sellerId: r.seller_id,
       photoUri: r.photo_path ? photoUrl(r.photo_path) : undefined,
+      photoPath: r.photo_path ?? undefined,
       createdAt: r.created_at,
     };
   });
@@ -190,36 +214,42 @@ function base64ToBytes(base64: string): Uint8Array {
   return bytes;
 }
 
-export type CreateListingInput = Omit<Listing, 'id' | 'createdAt' | 'sellerId' | 'photoUri'> & { photo?: NewPhoto };
+export type CreateListingInput = Omit<Listing, 'id' | 'createdAt' | 'sellerId' | 'photoUri' | 'photoPath'> & {
+  photo?: NewPhoto;
+};
+
+async function uploadPhoto(userId: string, photo: NewPhoto): Promise<string> {
+  const ext = photo.mimeType === 'image/png' ? 'png' : photo.mimeType === 'image/webp' ? 'webp' : 'jpg';
+  const path = `${userId}/${Date.now()}.${ext}`;
+  const { error } = await requireSupabase()
+    .storage.from(LISTING_PHOTOS_BUCKET)
+    .upload(path, base64ToBytes(photo.base64), { contentType: photo.mimeType, upsert: false });
+  if (error) throw error;
+  return path;
+}
+
+function listingColumns(input: CreateListingInput) {
+  return {
+    title: input.title,
+    category: input.category,
+    price: input.price,
+    unit: input.unit ?? null,
+    description: input.description,
+    availability: input.availability,
+    baked_at: input.availability === 'ready' && input.bakedAt ? isoToDate(input.bakedAt) : null,
+    notice_days: input.availability === 'preorder' ? (input.noticeDays ?? 1) : null,
+    dietary: input.dietary,
+  };
+}
 
 /** Uploads the photo (if any) into <user id>/ and inserts the listing. Returns the new listing id. */
 export async function createListing(userId: string, input: CreateListingInput): Promise<string> {
   const client = requireSupabase();
-  let photoPath: string | null = null;
-
-  if (input.photo) {
-    const ext = input.photo.mimeType === 'image/png' ? 'png' : input.photo.mimeType === 'image/webp' ? 'webp' : 'jpg';
-    photoPath = `${userId}/${Date.now()}.${ext}`;
-    const { error: uploadError } = await client.storage
-      .from(LISTING_PHOTOS_BUCKET)
-      .upload(photoPath, base64ToBytes(input.photo.base64), { contentType: input.photo.mimeType, upsert: false });
-    if (uploadError) throw uploadError;
-  }
+  const photoPath = input.photo ? await uploadPhoto(userId, input.photo) : null;
 
   const { data, error } = await client
     .from('listings')
-    .insert({
-      title: input.title,
-      category: input.category,
-      price: input.price,
-      unit: input.unit ?? null,
-      description: input.description,
-      availability: input.availability,
-      baked_at: input.availability === 'ready' && input.bakedAt ? isoToDate(input.bakedAt) : null,
-      notice_days: input.availability === 'preorder' ? (input.noticeDays ?? 1) : null,
-      dietary: input.dietary,
-      photo_path: photoPath,
-    })
+    .insert({ ...listingColumns(input), photo_path: photoPath })
     .select('id')
     .single<{ id: string }>();
 
@@ -229,6 +259,151 @@ export async function createListing(userId: string, input: CreateListingInput): 
     throw error;
   }
   return data.id;
+}
+
+/** Updates a listing; with a new photo, uploads it and removes the old one. */
+export async function updateListing(userId: string, listing: Listing, input: CreateListingInput) {
+  const client = requireSupabase();
+  const newPath = input.photo ? await uploadPhoto(userId, input.photo) : undefined;
+  const { error } = await client
+    .from('listings')
+    .update({ ...listingColumns(input), ...(newPath ? { photo_path: newPath } : {}) })
+    .eq('id', listing.id);
+  if (error) {
+    if (newPath) await client.storage.from(LISTING_PHOTOS_BUCKET).remove([newPath]);
+    throw error;
+  }
+  if (newPath && listing.photoPath) await client.storage.from(LISTING_PHOTOS_BUCKET).remove([listing.photoPath]);
+}
+
+export async function deleteListing(listing: Listing) {
+  const client = requireSupabase();
+  const { error } = await client.from('listings').delete().eq('id', listing.id);
+  if (error) throw error;
+  if (listing.photoPath) await client.storage.from(LISTING_PHOTOS_BUCKET).remove([listing.photoPath]);
+}
+
+// ---------------------------------------------------------------------------
+// Trades & ratings (XP only when both sides confirm, enforced in confirm_trade())
+// ---------------------------------------------------------------------------
+
+type TradeRow = {
+  id: string;
+  listing_id: string | null;
+  listing_title: string;
+  listing_category: Category | null;
+  role: 'buyer' | 'seller';
+  other_id: string;
+  other_name: string;
+  i_confirmed: boolean;
+  other_confirmed: boolean;
+  completed_at: string | null;
+  created_at: string;
+  i_rated: boolean;
+};
+
+export async function fetchTrades(): Promise<Trade[]> {
+  const { data, error } = await requireSupabase().rpc('my_trades');
+  if (error) throw error;
+  return ((data ?? []) as TradeRow[]).map((r) => ({
+    id: r.id,
+    listingId: r.listing_id,
+    listingTitle: r.listing_title,
+    listingCategory: r.listing_category ?? undefined,
+    role: r.role,
+    otherId: r.other_id,
+    otherName: r.other_name,
+    iConfirmed: r.i_confirmed,
+    otherConfirmed: r.other_confirmed,
+    completedAt: r.completed_at ?? undefined,
+    createdAt: r.created_at,
+    iRated: r.i_rated,
+  }));
+}
+
+/** Buyer marks "I bought this". Returns the trade id. */
+export async function markBought(listingId: string): Promise<string> {
+  const { data, error } = await requireSupabase().rpc('confirm_trade', { p_listing_id: listingId });
+  if (error) throw error;
+  return (data as { id: string }).id;
+}
+
+export async function confirmTrade(tradeId: string) {
+  const { error } = await requireSupabase().rpc('confirm_trade_by_id', { p_trade_id: tradeId });
+  if (error) throw error;
+}
+
+export async function declineTrade(tradeId: string) {
+  const { error } = await requireSupabase().rpc('decline_trade', { p_trade_id: tradeId });
+  if (error) throw error;
+}
+
+export async function rateTrade(tradeId: string, rateeId: string, stars: number, comment: string) {
+  const { error } = await requireSupabase()
+    .from('ratings')
+    .insert({ trade_id: tradeId, ratee_id: rateeId, stars, comment: comment.trim() || null });
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------------
+// Saved items
+// ---------------------------------------------------------------------------
+
+export async function fetchSavedIds(): Promise<string[]> {
+  const { data, error } = await requireSupabase()
+    .from('saved_listings')
+    .select('listing_id')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []).map((r: { listing_id: string }) => r.listing_id);
+}
+
+export async function setSaved(userId: string, listingId: string, saved: boolean) {
+  const client = requireSupabase();
+  const { error } = saved
+    ? await client.from('saved_listings').insert({ listing_id: listingId })
+    : await client.from('saved_listings').delete().eq('user_id', userId).eq('listing_id', listingId);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------------
+// Notifications (created by the server)
+// ---------------------------------------------------------------------------
+
+type NotificationRow = {
+  id: string;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  href: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+export async function fetchNotifications(): Promise<AppNotification[]> {
+  const { data, error } = await requireSupabase()
+    .from('notifications')
+    .select('id, kind, title, body, href, read_at, created_at')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return ((data ?? []) as NotificationRow[]).map((n) => ({
+    id: n.id,
+    kind: n.kind,
+    title: n.title,
+    body: n.body,
+    href: n.href ?? undefined,
+    read: n.read_at !== null,
+    createdAt: n.created_at,
+  }));
+}
+
+/** Marks the given notifications (or all unread when ids is omitted) as read. */
+export async function markNotificationsRead(ids?: string[]) {
+  let query = requireSupabase().from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null);
+  if (ids) query = query.in('id', ids);
+  const { error } = await query;
+  if (error) throw error;
 }
 
 // ---------------------------------------------------------------------------

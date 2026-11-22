@@ -2,7 +2,7 @@
  * Static mock data for Phase 1 (no backend yet).
  * Phase 2 replaces this with Supabase tables: profiles, listings, trades, ratings.
  */
-import type { AppNotification, CurrentUser, Listing, Seller } from './types';
+import type { AppNotification, CurrentUser, Listing, Seller, Trade } from './types';
 
 /** ISO date `days` days before now, so "נאפה היום" stays true whenever the app runs. */
 function daysBefore(days: number): string {
@@ -213,7 +213,7 @@ export const initialNotifications: AppNotification[] = [
     body: 'החלה המתוקה לשבת נמסרה? אשרו גם אתם, ושניכם תקבלו 20 נקודות.',
     createdAt: minutesAgo(20),
     read: false,
-    href: '/trade/l3',
+    href: '/trade/d1',
   },
   {
     id: 'n2',
@@ -250,5 +250,36 @@ export const initialNotifications: AppNotification[] = [
     createdAt: minutesAgo(60 * 24 * 5),
     read: true,
     href: '/profile',
+  },
+];
+
+/** Demo trades: one waiting for my confirmation, one completed that I haven't rated yet. */
+export const initialTrades: Trade[] = [
+  {
+    id: 'd1',
+    listingId: 'l3',
+    listingTitle: 'חלה מתוקה לשבת',
+    listingCategory: 'breads',
+    role: 'buyer',
+    otherId: 's4',
+    otherName: 'רונית שגיא',
+    iConfirmed: false,
+    otherConfirmed: true,
+    createdAt: minutesAgo(20),
+    iRated: false,
+  },
+  {
+    id: 'd2',
+    listingId: 'm2',
+    listingTitle: 'עוגיות חמאה',
+    listingCategory: 'cookies',
+    role: 'seller',
+    otherId: 's2',
+    otherName: 'יוסי לוי',
+    iConfirmed: true,
+    otherConfirmed: true,
+    completedAt: minutesAgo(60 * 30),
+    createdAt: minutesAgo(60 * 32),
+    iRated: false,
   },
 ];

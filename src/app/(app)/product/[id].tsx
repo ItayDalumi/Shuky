@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowRight, CalendarClock, Clock, Heart, PackageSearch } from 'lucide-react-native';
+import { ArrowRight, CalendarClock, Clock, Handshake, Heart, PackageSearch } from 'lucide-react-native';
 
 import {
   AppText,
@@ -14,7 +15,10 @@ import {
   WhatsAppIcon,
 } from '@/components';
 import { CATEGORIES, DIETARY_LABELS } from '@/data/categories';
+import { errorMessage } from '@/lib/api';
+import { confirmAction } from '@/lib/confirm';
 import { availabilityLabel, formatPriceLine, noticeLabel } from '@/lib/format';
+import { XP_PER_TRADE } from '@/lib/levels';
 import { goBack } from '@/lib/navigation';
 import { openWhatsApp } from '@/lib/whatsapp';
 import { useAppStore } from '@/store/AppStore';
@@ -23,7 +27,9 @@ import { border, colors, radius, spacing } from '@/theme';
 /** 06 · עמוד מוצר */
 export default function ProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getListing, getSeller, isSaved, toggleSaved, user, mode } = useAppStore();
+  const { getListing, getSeller, isSaved, toggleSaved, user, openTradeFor, markBought, deleteListing } = useAppStore();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const listing = id ? getListing(id) : undefined;
   const seller = listing ? getSeller(listing.sellerId) : undefined;
@@ -57,6 +63,46 @@ export default function ProductScreen() {
         ? `היי ${firstName}! ראיתי בשוקי את "${listing.title}" ואשמח להזמין מראש. לאיזה תאריך אפשר?`
         : `היי ${firstName}! ראיתי בשוקי את "${listing.title}" ואשמח להזמין 🙂 זה עדיין זמין?`,
     );
+
+  const openTrade = openTradeFor(listing.id);
+
+  const run = async (action: () => Promise<void>) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await action();
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Buyer marks the purchase; the seller confirms; then both get XP (enforced by the server).
+  const onBought = () =>
+    confirmAction({
+      title: 'קנית את זה?',
+      message: `נבקש מ${firstName} לאשר. ברגע ששניכם מאשרים, כל אחד מקבל ${XP_PER_TRADE} נקודות.`,
+      confirmLabel: 'כן, קניתי',
+      onConfirm: () =>
+        run(async () => {
+          const tradeId = await markBought(listing.id);
+          router.push(`/trade/${tradeId}`);
+        }),
+    });
+
+  const onDelete = () =>
+    confirmAction({
+      title: 'למחוק את המוצר?',
+      message: 'המוצר יוסר מהשכונה. אי אפשר לבטל את הפעולה.',
+      confirmLabel: 'מחיקה',
+      destructive: true,
+      onConfirm: () =>
+        run(async () => {
+          await deleteListing(listing.id);
+          goBack(router, '/profile');
+        }),
+    });
 
   return (
     <Screen>
@@ -125,12 +171,28 @@ export default function ProductScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
+        {error ? (
+          <AppText variant="small" color={colors.tomatoDark} center>
+            {error}
+          </AppText>
+        ) : null}
         {isMine ? (
-          <View style={styles.mineNote}>
-            <AppText variant="small" color={colors.leafDark} center>
-              זה המוצר שלך. שכנים שמתעניינים יפנו אליך בוואטסאפ.
-            </AppText>
-          </View>
+          <>
+            <View style={styles.mineNote}>
+              <AppText variant="small" color={colors.leafDark} center>
+                זה המוצר שלך. שכנים שמתעניינים יפנו אליך בוואטסאפ.
+              </AppText>
+            </View>
+            <View style={styles.actions}>
+              <Button
+                label="עריכה"
+                variant="secondary"
+                onPress={() => router.push({ pathname: '/listing/new', params: { edit: listing.id } })}
+                style={styles.action}
+              />
+              <Button label="מחיקה" variant="secondary" onPress={onDelete} loading={busy} style={styles.action} />
+            </View>
+          </>
         ) : (
           <>
             <Button
@@ -140,14 +202,24 @@ export default function ProductScreen() {
               onPress={order}
               accessibilityLabel={`הזמנה מ${seller.name} בוואטסאפ`}
             />
-            {/* Phase 3 wires this to confirm_trade() (XP only after both sides confirm). Demo only for now. */}
-            {mode === 'demo' ? (
-              <Pressable accessibilityRole="link" hitSlop={8} onPress={() => router.push(`/trade/${listing.id}`)}>
-                <AppText variant="caption" color={colors.muted} center style={styles.doneLink}>
-                  סגרתם עסקה? סמנו שהיא הושלמה
+            {openTrade ? (
+              <Pressable
+                accessibilityRole="link"
+                onPress={() => router.push(`/trade/${openTrade.id}`)}
+                style={styles.tradeStatus}
+              >
+                <Handshake size={16} color={colors.honeyDark} />
+                <AppText variant="captionMedium" color={colors.honeyDark}>
+                  {openTrade.iConfirmed ? `סימנת שקנית · מחכים לאישור של ${firstName}` : `${firstName} מחכה לאישור שלך`}
                 </AppText>
               </Pressable>
-            ) : null}
+            ) : (
+              <Pressable accessibilityRole="button" hitSlop={8} onPress={onBought} disabled={busy}>
+                <AppText variant="caption" color={colors.muted} center style={styles.doneLink}>
+                  {`קניתי את זה · סמנו עסקה וקבלו ${XP_PER_TRADE} נקודות`}
+                </AppText>
+              </Pressable>
+            )}
           </>
         )}
       </View>
@@ -180,6 +252,17 @@ const styles = StyleSheet.create({
   dietary: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   dietaryPill: { borderWidth: border.hairline, borderColor: colors.line },
   doneLink: { textDecorationLine: 'underline' },
+  actions: { flexDirection: 'row', gap: spacing.sm },
+  action: { flex: 1 },
+  tradeStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    backgroundColor: colors.honeyLight,
+    borderRadius: radius.pill,
+  },
   mineNote: {
     padding: spacing.md,
     backgroundColor: colors.leafLight,

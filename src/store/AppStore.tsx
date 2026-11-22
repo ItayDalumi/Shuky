@@ -1,10 +1,7 @@
 /**
  * App state. Two modes:
- *  - live: Supabase is configured in .env. Auth, profile, feed and new listings hit the server.
+ *  - live: Supabase is configured in .env. Everything goes through src/lib/api.ts.
  *  - demo: no Supabase config. Everything runs on the mock data, in memory.
- *
- * Saved items, notifications and notification preferences are still in memory in both modes
- * (Phase 3 moves them to the server).
  */
 import {
   createContext,
@@ -12,13 +9,21 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
 
-import { currentUser as demoUser, initialListings, initialNotifications, sellers as demoSellers } from '@/data/mock';
-import type { AppNotification, CurrentUser, Listing, NotificationPrefs, Seller } from '@/data/types';
+import {
+  currentUser as demoUser,
+  initialListings,
+  initialNotifications,
+  initialTrades,
+  sellers as demoSellers,
+} from '@/data/mock';
+import type { AppNotification, CurrentUser, Listing, NotificationPrefs, Seller, Trade } from '@/data/types';
 import * as api from '@/lib/api';
+import { getLevelInfo, XP_PER_TRADE } from '@/lib/levels';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type Mode = 'live' | 'demo';
@@ -52,20 +57,38 @@ type AppStore = {
   myListings: Listing[];
   feedLoading: boolean;
   feedError: string | null;
-  refreshFeed: () => Promise<void>;
+  /** Feed, trades and notifications */
+  refreshAll: () => Promise<void>;
   getListing: (id: string) => Listing | undefined;
   getSeller: (id: string) => Seller | undefined;
   /** Returns the new listing id */
   addListing: (input: NewListingInput) => Promise<string>;
+  updateListing: (id: string, input: NewListingInput) => Promise<void>;
+  deleteListing: (id: string) => Promise<void>;
 
-  // Saved (in memory)
+  // Trades & ratings
+  trades: Trade[];
+  /** Trades waiting for the current user's confirmation */
+  pendingForMe: number;
+  getTrade: (id: string) => Trade | undefined;
+  /** The open trade (not completed) on this listing, if the user is in it */
+  openTradeFor: (listingId: string) => Trade | undefined;
+  refreshTrades: () => Promise<void>;
+  /** Buyer: "I bought this". Returns the trade id. */
+  markBought: (listingId: string) => Promise<string>;
+  confirmTrade: (tradeId: string) => Promise<void>;
+  declineTrade: (tradeId: string) => Promise<void>;
+  rateTrade: (tradeId: string, stars: number, comment: string) => Promise<void>;
+
+  // Saved
   savedListings: Listing[];
   isSaved: (id: string) => boolean;
   toggleSaved: (id: string) => void;
 
-  // Notifications (in memory)
+  // Notifications
   notifications: AppNotification[];
   unreadCount: number;
+  refreshNotifications: () => Promise<void>;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
   notificationPrefs: NotificationPrefs;
@@ -83,6 +106,11 @@ const EMPTY_USER: CurrentUser = {
   rating: null,
 };
 
+const DEFAULT_PREFS: NotificationPrefs = { newListings: true, orders: true, ratings: true };
+
+/** Demo: how long the "other side" takes to confirm a trade you marked. */
+const DEMO_CONFIRM_DELAY_MS = 3000;
+
 const AppStoreContext = createContext<AppStore | null>(null);
 
 export function AppStoreProvider({ children }: PropsWithChildren) {
@@ -97,14 +125,22 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   const [feedLoading, setFeedLoading] = useState(false);
   const [feedError, setFeedError] = useState<string | null>(null);
 
+  const [trades, setTrades] = useState<Trade[]>(live ? [] : initialTrades);
   const [savedIds, setSavedIds] = useState<string[]>(live ? [] : ['l2']);
   const [notifications, setNotifications] = useState<AppNotification[]>(live ? [] : initialNotifications);
-  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>({
-    newListings: true,
-    orders: true,
-    ratings: true,
-  });
+  const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
 
+  // Latest user / trades, for async callbacks (demo timers, reloads).
+  const userRef = useRef(user);
+  const tradesRef = useRef(trades);
+  useEffect(() => {
+    userRef.current = user;
+    tradesRef.current = trades;
+  }, [user, trades]);
+
+  // ---------------------------------------------------------------------------
+  // Loading (live)
+  // ---------------------------------------------------------------------------
   const refreshFeed = useCallback(async () => {
     if (!live) return;
     setFeedLoading(true);
@@ -120,21 +156,46 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     }
   }, [live]);
 
+  const refreshTrades = useCallback(async () => {
+    if (live) setTrades(await api.fetchTrades());
+  }, [live]);
+
+  const refreshNotifications = useCallback(async () => {
+    if (live) setNotifications(await api.fetchNotifications());
+  }, [live]);
+
   const loadProfile = useCallback(
     async (userId: string, email: string): Promise<'needsProfile' | 'ready'> => {
-      const profile = await api.fetchMyProfile(userId, email);
-      if (!profile) {
+      const result = await api.fetchMyProfile(userId, email);
+      if (!result) {
         setUser({ ...EMPTY_USER, id: userId, email });
         setAuthStatus('needsProfile');
         return 'needsProfile';
       }
-      setUser(profile);
+      setUser(result.user);
+      setNotificationPrefs(result.prefs);
       setAuthStatus('ready');
+      // Everything else loads in the background.
       refreshFeed();
+      api.fetchTrades().then(setTrades).catch(() => {});
+      api.fetchSavedIds().then(setSavedIds).catch(() => {});
+      api.fetchNotifications().then(setNotifications).catch(() => {});
       return 'ready';
     },
     [refreshFeed],
   );
+
+  /** Re-reads XP / trades / rating after a trade or rating changes them. */
+  const reloadProfileStats = useCallback(async () => {
+    if (!live) return;
+    const result = await api.fetchMyProfile(userRef.current.id, userRef.current.email);
+    if (result) setUser(result.user);
+  }, [live]);
+
+  const refreshAll = useCallback(async () => {
+    if (!live) return;
+    await Promise.all([refreshFeed(), refreshTrades().catch(() => {}), refreshNotifications().catch(() => {})]);
+  }, [live, refreshFeed, refreshTrades, refreshNotifications]);
 
   const applySession = useCallback(
     (session: { id: string; email: string } | null) => {
@@ -142,7 +203,10 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         setUser(EMPTY_USER);
         setListings([]);
         setSellers([]);
+        setTrades([]);
         setSavedIds([]);
+        setNotifications([]);
+        setNotificationPrefs(DEFAULT_PREFS);
         setAuthStatus('signedOut');
         return;
       }
@@ -166,7 +230,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   }, [applySession]);
 
   // ---------------------------------------------------------------------------
-  // Auth & profile actions
+  // Auth & profile
   // ---------------------------------------------------------------------------
   const sendOtp = useCallback(
     async (email: string) => {
@@ -239,12 +303,12 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     (id: string): Seller | undefined => {
       const seller = sellers.find((s) => s.id === id);
       if (id !== user.id) return seller;
-      // The current user's seller card follows their profile (e.g. a name edited in settings).
+      // The current user's seller card follows their own profile.
       return {
         id: user.id,
         name: user.name,
         distanceMeters: 0,
-        level: seller?.level ?? 1,
+        level: getLevelInfo(user.xp).level,
         trades: user.trades,
         rating: user.rating,
         whatsapp: user.phone,
@@ -274,23 +338,174 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     [live, user.id, refreshFeed],
   );
 
+  const updateListing = useCallback(
+    async (id: string, input: NewListingInput) => {
+      const existing = listings.find((l) => l.id === id);
+      if (!existing) throw new Error('listing not found');
+      if (live) {
+        await api.updateListing(user.id, existing, input);
+        await refreshFeed();
+        return;
+      }
+      const { photo: _photo, localPhotoUri, ...rest } = input;
+      setListings((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, ...rest, photoUri: localPhotoUri ?? l.photoUri } : l)),
+      );
+    },
+    [live, user.id, listings, refreshFeed],
+  );
+
+  const deleteListing = useCallback(
+    async (id: string) => {
+      const existing = listings.find((l) => l.id === id);
+      if (!existing) return;
+      if (live) await api.deleteListing(existing);
+      setListings((prev) => prev.filter((l) => l.id !== id));
+      setSavedIds((prev) => prev.filter((x) => x !== id));
+    },
+    [live, listings],
+  );
+
   // ---------------------------------------------------------------------------
-  // Saved & notifications (in memory)
+  // Trades & ratings
   // ---------------------------------------------------------------------------
-  const isSaved = useCallback((id: string) => savedIds.includes(id), [savedIds]);
-  const toggleSaved = useCallback((id: string) => {
-    setSavedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [id, ...prev]));
+  const getTrade = useCallback((id: string) => trades.find((t) => t.id === id), [trades]);
+  const openTradeFor = useCallback(
+    (listingId: string) => trades.find((t) => t.listingId === listingId && !t.completedAt),
+    [trades],
+  );
+
+  /** Demo: complete a trade locally (+XP, notification), mirroring confirm_trade(). */
+  const demoComplete = useCallback((tradeId: string) => {
+    const trade = tradesRef.current.find((t) => t.id === tradeId);
+    if (!trade || trade.completedAt) return;
+    const completedAt = new Date().toISOString();
+    setTrades((prev) =>
+      prev.map((t) => (t.id === tradeId ? { ...t, iConfirmed: true, otherConfirmed: true, completedAt } : t)),
+    );
+    setUser((u) => ({ ...u, xp: u.xp + XP_PER_TRADE, trades: u.trades + 1 }));
+    setNotifications((prev) => [
+      {
+        id: `n-${Date.now()}`,
+        kind: 'tradeCompleted',
+        title: `העסקה הושלמה! +${XP_PER_TRADE} נקודות`,
+        body: trade.listingTitle,
+        createdAt: new Date().toISOString(),
+        read: false,
+        href: `/trade/${tradeId}`,
+      },
+      ...prev,
+    ]);
   }, []);
 
-  const markNotificationRead = useCallback((id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  }, []);
+  const markBought = useCallback(
+    async (listingId: string) => {
+      if (live) {
+        const id = await api.markBought(listingId);
+        await refreshTrades();
+        return id;
+      }
+      const listing = listings.find((l) => l.id === listingId);
+      const seller = listing ? sellers.find((s) => s.id === listing.sellerId) : undefined;
+      const trade: Trade = {
+        id: `t-${Date.now()}`,
+        listingId,
+        listingTitle: listing?.title ?? '',
+        listingCategory: listing?.category,
+        role: 'buyer',
+        otherId: seller?.id ?? '',
+        otherName: seller?.name ?? '',
+        iConfirmed: true,
+        otherConfirmed: false,
+        createdAt: new Date().toISOString(),
+        iRated: false,
+      };
+      setTrades((prev) => [trade, ...prev]);
+      // Demo: the seller confirms a few seconds later.
+      setTimeout(() => demoComplete(trade.id), DEMO_CONFIRM_DELAY_MS);
+      return trade.id;
+    },
+    [live, listings, sellers, refreshTrades, demoComplete],
+  );
+
+  const confirmTrade = useCallback(
+    async (tradeId: string) => {
+      if (live) {
+        await api.confirmTrade(tradeId);
+        await Promise.all([refreshTrades(), reloadProfileStats(), refreshNotifications()]);
+        return;
+      }
+      const trade = trades.find((t) => t.id === tradeId);
+      if (!trade) return;
+      if (trade.otherConfirmed) demoComplete(tradeId);
+      else setTrades((prev) => prev.map((t) => (t.id === tradeId ? { ...t, iConfirmed: true } : t)));
+    },
+    [live, trades, refreshTrades, reloadProfileStats, refreshNotifications, demoComplete],
+  );
+
+  const declineTrade = useCallback(
+    async (tradeId: string) => {
+      if (live) {
+        await api.declineTrade(tradeId);
+        await Promise.all([refreshTrades(), refreshNotifications()]);
+        return;
+      }
+      setTrades((prev) => prev.filter((t) => t.id !== tradeId));
+      setNotifications((prev) => prev.filter((n) => n.href !== `/trade/${tradeId}`));
+    },
+    [live, refreshTrades, refreshNotifications],
+  );
+
+  const rateTrade = useCallback(
+    async (tradeId: string, stars: number, comment: string) => {
+      const trade = trades.find((t) => t.id === tradeId);
+      if (!trade) return;
+      if (live) await api.rateTrade(tradeId, trade.otherId, stars, comment);
+      setTrades((prev) => prev.map((t) => (t.id === tradeId ? { ...t, iRated: true } : t)));
+    },
+    [live, trades],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Saved
+  // ---------------------------------------------------------------------------
+  const isSaved = useCallback((id: string) => savedIds.includes(id), [savedIds]);
+  const toggleSaved = useCallback(
+    (id: string) => {
+      const saving = !savedIds.includes(id);
+      setSavedIds((prev) => (saving ? [id, ...prev] : prev.filter((x) => x !== id)));
+      if (live) {
+        // Optimistic; roll back if the server says no.
+        api.setSaved(user.id, id, saving).catch(() => {
+          setSavedIds((prev) => (saving ? prev.filter((x) => x !== id) : [id, ...prev]));
+        });
+      }
+    },
+    [live, savedIds, user.id],
+  );
+
+  // ---------------------------------------------------------------------------
+  // Notifications
+  // ---------------------------------------------------------------------------
+  const markNotificationRead = useCallback(
+    (id: string) => {
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+      if (live) api.markNotificationsRead([id]).catch(() => {});
+    },
+    [live],
+  );
   const markAllNotificationsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
-  const setNotificationPref = useCallback((key: keyof NotificationPrefs, value: boolean) => {
-    setNotificationPrefs((prev) => ({ ...prev, [key]: value }));
-  }, []);
+    if (live) api.markNotificationsRead().catch(() => {});
+  }, [live]);
+  const setNotificationPref = useCallback(
+    (key: keyof NotificationPrefs, value: boolean) => {
+      const next = { ...notificationPrefs, [key]: value };
+      setNotificationPrefs(next);
+      if (live) api.updateNotificationPrefs(user.id, next).catch(() => setNotificationPrefs(notificationPrefs));
+    },
+    [live, notificationPrefs, user.id],
+  );
 
   const value = useMemo<AppStore>(() => {
     const byNewest = [...listings].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -309,15 +524,27 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       myListings: byNewest.filter((l) => l.sellerId === user.id),
       feedLoading,
       feedError,
-      refreshFeed,
+      refreshAll,
       getListing,
       getSeller,
       addListing,
+      updateListing,
+      deleteListing,
+      trades,
+      pendingForMe: trades.filter((t) => !t.completedAt && !t.iConfirmed && t.otherConfirmed).length,
+      getTrade,
+      openTradeFor,
+      refreshTrades,
+      markBought,
+      confirmTrade,
+      declineTrade,
+      rateTrade,
       savedListings: savedIds.map((id) => listings.find((l) => l.id === id)).filter((l): l is Listing => !!l),
       isSaved,
       toggleSaved,
       notifications,
       unreadCount: notifications.filter((n) => !n.read).length,
+      refreshNotifications,
       markNotificationRead,
       markAllNotificationsRead,
       notificationPrefs,
@@ -337,14 +564,25 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     listings,
     feedLoading,
     feedError,
-    refreshFeed,
+    refreshAll,
     getListing,
     getSeller,
     addListing,
+    updateListing,
+    deleteListing,
+    trades,
+    getTrade,
+    openTradeFor,
+    refreshTrades,
+    markBought,
+    confirmTrade,
+    declineTrade,
+    rateTrade,
     savedIds,
     isSaved,
     toggleSaved,
     notifications,
+    refreshNotifications,
     markNotificationRead,
     markAllNotificationsRead,
     notificationPrefs,
