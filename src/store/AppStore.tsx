@@ -24,6 +24,7 @@ import {
 import type { AppNotification, CurrentUser, Listing, NotificationPrefs, Seller, Trade } from '@/data/types';
 import * as api from '@/lib/api';
 import { getLevelInfo, XP_PER_TRADE } from '@/lib/levels';
+import { getRegisteredToken, setRegisteredToken, showLocalNotification } from '@/lib/push';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type Mode = 'live' | 'demo';
@@ -287,7 +288,13 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   );
 
   const signOut = useCallback(async () => {
-    if (live) await api.signOut();
+    if (!live) return;
+    const token = getRegisteredToken();
+    if (token) {
+      await api.removePushToken(token).catch(() => {});
+      setRegisteredToken(null);
+    }
+    await api.signOut();
   }, [live]);
 
   const deleteAccount = useCallback(async () => {
@@ -384,6 +391,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       prev.map((t) => (t.id === tradeId ? { ...t, iConfirmed: true, otherConfirmed: true, completedAt } : t)),
     );
     setUser((u) => ({ ...u, xp: u.xp + XP_PER_TRADE, trades: u.trades + 1 }));
+    // Demo: show it on the phone like a real push would.
+    showLocalNotification(`העסקה הושלמה! +${XP_PER_TRADE} נקודות`, trade.listingTitle, `/trade/${tradeId}`).catch(() => {});
     setNotifications((prev) => [
       {
         id: `n-${Date.now()}`,

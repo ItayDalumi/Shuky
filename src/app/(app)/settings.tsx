@@ -1,8 +1,8 @@
-import { useState, type ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
-import { Bell, CakeSlice, Lock, LogOut, Mail, MapPin, Star, Trash2, type LucideIcon } from 'lucide-react-native';
+import { Bell, BellOff, BellRing, CakeSlice, Lock, LogOut, Mail, MapPin, Star, Trash2, type LucideIcon } from 'lucide-react-native';
 
 import { AppText, Input, Screen, ScreenHeader } from '@/components';
 import type { NotificationPrefs } from '@/data/types';
@@ -10,6 +10,7 @@ import { confirmAction } from '@/lib/confirm';
 import { errorMessage } from '@/lib/api';
 import { formatPhoneInput, isValidIsraeliMobile } from '@/lib/format';
 import { resetToWelcome } from '@/lib/navigation';
+import { ensurePermission, getPermissionState, type PermissionState } from '@/lib/push';
 import { ltr } from '@/lib/rtl';
 import { useAppStore } from '@/store/AppStore';
 import { border, colors, radius, spacing } from '@/theme';
@@ -25,6 +26,17 @@ export default function SettingsScreen() {
   const { user, updateUser, signOut, deleteAccount, notificationPrefs, setNotificationPref } = useAppStore();
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone);
+  const [permission, setPermission] = useState<PermissionState>('unsupported');
+
+  useEffect(() => {
+    getPermissionState().then(setPermission).catch(() => {});
+  }, []);
+
+  const enablePush = async () => {
+    if (permission === 'denied') return Linking.openSettings();
+    await ensurePermission();
+    setPermission(await getPermissionState());
+  };
   const [error, setError] = useState<string | null>(null);
 
   const saveName = async () => {
@@ -122,6 +134,15 @@ export default function SettingsScreen() {
           </Section>
 
           <Section title="התראות">
+            {permission === 'denied' || permission === 'undetermined' ? (
+              <Row
+                icon={permission === 'denied' ? BellOff : BellRing}
+                iconColor={colors.tomato}
+                label={permission === 'denied' ? 'ההתראות חסומות בטלפון' : 'הפעלת התראות בטלפון'}
+                hint={permission === 'denied' ? 'לחצו כדי לפתוח את הגדרות הטלפון' : 'כדי לדעת מיד על עסקאות ומאפים חדשים'}
+                onPress={enablePush}
+              />
+            ) : null}
             {NOTIFICATION_ROWS.map((row, i) => (
               <Row
                 key={row.key}

@@ -407,6 +407,21 @@ export async function markNotificationsRead(ids?: string[]) {
 }
 
 // ---------------------------------------------------------------------------
+// Push notifications
+// ---------------------------------------------------------------------------
+
+export async function registerPushToken(token: string, platform: 'ios' | 'android') {
+  const { error } = await requireSupabase().rpc('register_push_token', { p_token: token, p_platform: platform });
+  if (error) throw error;
+}
+
+/** On sign out: stop pushes to this device for this account. */
+export async function removePushToken(token: string) {
+  const { error } = await requireSupabase().from('push_tokens').delete().eq('token', token);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------------
 // Account
 // ---------------------------------------------------------------------------
 

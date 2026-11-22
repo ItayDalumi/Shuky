@@ -46,7 +46,8 @@ so new users enter one on the name screen (it isn't verified).
 
 1. Create a project at [supabase.com](https://supabase.com) (region: Frankfurt is closest to Israel).
 2. **SQL Editor** → run each file in `supabase/migrations/` **in order** (paste → **Run**):
-   `20261121120000_init.sql`, `20261122090000_email_auth.sql`, then `20261122140000_phase3.sql`.
+   `20261121120000_init.sql`, `20261122090000_email_auth.sql`, `20261122140000_phase3.sql`,
+   then `20261123090000_push.sql`.
    This creates the tables, the security rules (RLS), the feed / trade / rating / notification
    functions and the `listing-photos` bucket.
 3. **Email code** (free; the Email provider is on by default):
@@ -58,6 +59,22 @@ so new users enter one on the name screen (it isn't verified).
 4. **Project Settings → API**: copy the Project URL and the anon / publishable key into a `.env` file
    (see `.env.example`). Never use the `service_role` / secret key in the app.
 5. Restart with a clean cache: `npx expo start --clear`.
+
+### Push notifications (free)
+
+Every in-app notification the server creates is also sent as a push through the free Expo Push
+Service, straight from the database (`pg_net`, enabled by the push migration). No extra server.
+
+1. Link the app to a free Expo project once: `npx eas-cli@latest init` (adds `extra.eas.projectId`
+   to `app.json`; commit it). Without it the app skips push registration.
+2. **iPhone:** pushes work in Expo Go once the project id is set.
+   **Android:** Expo Go no longer receives pushes (since SDK 53). Make a development build with EAS
+   (free tier): `npx eas-cli@latest build --profile development --platform android`, and add Firebase
+   Cloud Messaging credentials (a free Firebase project) with `npx eas-cli@latest credentials`.
+3. The app asks for permission when you enter the app; Settings shows a shortcut if it's blocked.
+   Notification preferences apply to pushes too. Signing out removes this device.
+
+In demo mode the phone shows a local notification when a demo trade completes.
 
 The database tests in `supabase/tests` check the security rules against a local Postgres + PostGIS
 (see `supabase/tests/run.sh`).
@@ -167,4 +184,5 @@ Icons are [Lucide](https://lucide.dev) (`lucide-react-native`), the same line st
 - **Phase 3 (done):** trade confirmation by both sides with XP and level-ups, ratings, saved items
   and notifications on the server (created by triggers, respecting preferences), edit / delete
   your own listings.
-- **Next:** push notifications (Expo push, free), privacy policy / terms pages, store builds (EAS).
+- **Push notifications (done):** Expo Push Service from the database, device registration, tap to open.
+- **Next:** privacy policy / terms pages, store builds (EAS).

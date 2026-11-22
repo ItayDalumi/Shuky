@@ -1,12 +1,14 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Redirect, Stack } from 'expo-router';
 
+import { usePushNotifications } from '@/lib/usePushNotifications';
 import { useAppStore } from '@/store/AppStore';
 import { colors } from '@/theme';
 
 /** Everything inside (app) requires a signed-in user with a profile (live mode). */
 export default function AppLayout() {
   const { authStatus } = useAppStore();
+  usePushNotifications();
 
   if (authStatus === 'loading') {
     return (
