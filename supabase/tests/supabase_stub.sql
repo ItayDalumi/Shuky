@@ -22,3 +22,14 @@ create function storage.foldername(name text) returns text[] language sql immuta
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+
+-- Stand-in for pg_net: records requests instead of sending them.
+create schema if not exists net;
+create table net.test_calls (url text, body jsonb, headers jsonb, created_at timestamptz default now());
+create function net.http_post(url text, body jsonb default '{}', params jsonb default '{}', headers jsonb default '{}', timeout_milliseconds integer default 5000)
+returns bigint language plpgsql as $$
+begin
+  insert into net.test_calls (url, body, headers) values (url, body, headers);
+  return 1;
+end $$;
+grant usage on schema net to anon, authenticated, service_role;

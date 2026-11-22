@@ -66,6 +66,14 @@
         {
           "locationWhenInUsePermission": "כדי להציג מאפים בסביבה. השכנים יראו רק מרחק משוער, אף פעם לא את הכתובת שלך."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#E85D3F",
+          "defaultChannel": "default"
+        }
       ]
     ]
   }
