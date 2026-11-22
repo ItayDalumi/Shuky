@@ -1,5 +1,7 @@
 # Shuky · שוקי
 
+![Shuky logo](docs/brand/logo-wordmark.png)
+
 **מה שנאפה בשכונה שלך** – a hyperlocal marketplace for home-baked goods. Neighbors who bake at home
 (cakes, cookies, pastries, breads, desserts) sell to neighbors who want to buy, with seller ratings and
 levels front and center. Items are either ready now or baked to order (pre-order). Launch community:
@@ -116,6 +118,10 @@ docs/                       Screenshots
 | `/settings` | Settings: profile, notification toggles, privacy, sign out, delete account |
 
 ### Design system
+
+Logo: a home with a fresh cookie and a wisp of steam from the chimney (home-baked, from the
+neighborhood). Source: `docs/brand/logo.svg`; app icons in `assets/` (iOS icon, Android adaptive
+foreground / background / monochrome, splash, favicon).
 
 Tokens live in `src/theme/tokens.ts` and mirror the Figma file: tomato (primary), leaf (freshness,
 location, success), honey (baked goods, XP), cream background (never pure white), white cards,

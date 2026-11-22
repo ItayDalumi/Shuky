@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="#E85D3F"/>
+  <defs>
+    <mask id="bite"><rect width="1024" height="1024" fill="#fff"/><circle cx="604" cy="566" r="54" fill="#000"/></mask>
+  </defs>
+  <!-- steam from the chimney: fresh out of the oven -->
+  <path d="M664 300 q-26 -34 0 -68 q26 -34 0 -68" fill="none" stroke="#F4B942" stroke-width="22" stroke-linecap="round"/>
+  <!-- chimney -->
+  <rect x="628" y="318" width="74" height="120" rx="14" fill="#FFF8EE"/>
+  <!-- house: roof + body, rounded -->
+  <path d="M512 262 L770 470 L770 742 Q770 790 722 790 L302 790 Q254 790 254 742 L254 470 Z" fill="#FFF8EE" stroke="#FFF8EE" stroke-width="40" stroke-linejoin="round"/>
+  <!-- cookie with a bite -->
+  <g mask="url(#bite)">
+    <circle cx="512" cy="618" r="128" fill="#F4B942"/>
+  </g>
+  <g fill="#8A5A00">
+    <ellipse cx="462" cy="574" rx="19" ry="15" transform="rotate(-20 462 574)"/>
+    <ellipse cx="540" cy="640" rx="19" ry="15" transform="rotate(25 540 640)"/>
+    <ellipse cx="452" cy="668" rx="17" ry="13" transform="rotate(10 452 668)"/>
+    <ellipse cx="560" cy="700" rx="13" ry="10"/>
+    <ellipse cx="500" cy="720" rx="12" ry="9"/>
+  </g></svg>
