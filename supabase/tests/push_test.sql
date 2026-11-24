@@ -22,12 +22,14 @@ do $$ begin
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
 insert into public.profiles (id, name, phone) values (auth.uid(), 'מיכל', '972503333333');
+select public.set_my_location(31.373, 34.815);
 do $$ begin
   assert (select count(*) from public.push_tokens) = 0, 'cannot see others tokens';
   raise notice 'PASS users cannot see other users'' devices';
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 insert into public.profiles (id, name, phone) values (auth.uid(), 'דנה', '972502222222');
+select public.set_my_location(31.375, 34.817);
 insert into public.listings (title, category, price, availability, baked_at) values ('עוגיות', 'cookies', 25, 'ready', current_date);
 reset role;
 do $$ declare c record; begin

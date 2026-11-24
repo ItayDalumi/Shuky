@@ -267,6 +267,8 @@ export const initialTrades: Trade[] = [
     otherConfirmed: true,
     createdAt: minutesAgo(20),
     iRated: false,
+    xpAwarded: false,
+    canRate: true,
   },
   {
     id: 'd2',
@@ -281,5 +283,7 @@ export const initialTrades: Trade[] = [
     completedAt: minutesAgo(60 * 30),
     createdAt: minutesAgo(60 * 32),
     iRated: false,
+    xpAwarded: true,
+    canRate: true,
   },
 ];

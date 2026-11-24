@@ -17,6 +17,7 @@ import {
 import { CATEGORIES, CATEGORY_ORDER, DIETARY_LABELS, DIETARY_ORDER, NOTICE_OPTIONS } from '@/data/categories';
 import type { Availability, Category, DietaryTag } from '@/data/types';
 import { errorMessage, type NewPhoto } from '@/lib/api';
+import { preparePhoto } from '@/lib/photo';
 import { AVAILABILITY_LABELS, daysAgo, noticeLabel, relativeDay } from '@/lib/format';
 import { goBack } from '@/lib/navigation';
 import { useAppStore } from '@/store/AppStore';
@@ -65,13 +66,19 @@ export default function NewListingScreen() {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.6,
-      base64: true,
+      quality: 1,
+      exif: false,
     });
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) return;
-    setPhotoUri(asset.uri);
-    setPhoto(asset.base64 ? { base64: asset.base64, mimeType: asset.mimeType ?? 'image/jpeg' } : undefined);
+    try {
+      // Re-encode + downsize: removes hidden metadata such as the GPS location of your home.
+      const prepared = await preparePhoto(asset.uri);
+      setPhotoUri(prepared.uri);
+      setPhoto({ base64: prepared.base64, mimeType: prepared.mimeType });
+    } catch (e) {
+      setError(errorMessage(e));
+    }
   };
 
   const publish = async () => {

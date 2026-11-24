@@ -4,6 +4,7 @@
  */
 import type {
   AppNotification,
+  BlockedUser,
   Availability,
   Category,
   CurrentUser,
@@ -11,9 +12,11 @@ import type {
   Listing,
   NotificationKind,
   NotificationPrefs,
+  ReportReason,
   Seller,
   Trade,
 } from '@/data/types';
+import { stripJpegMetadata } from './jpegMetadata';
 import { LISTING_PHOTOS_BUCKET, requireSupabase } from './supabase';
 
 // ---------------------------------------------------------------------------
@@ -36,10 +39,10 @@ export function toLocalIL(phone: string | null | undefined): string {
 }
 
 /** Emails a one-time code (the "Magic Link" email template must include {{ .Token }}). */
-export async function sendOtp(email: string) {
+export async function sendOtp(email: string, captchaToken?: string) {
   const { error } = await requireSupabase().auth.signInWithOtp({
     email: email.trim().toLowerCase(),
-    options: { shouldCreateUser: true },
+    options: { shouldCreateUser: true, captchaToken },
   });
   if (error) throw error;
 }
@@ -87,12 +90,10 @@ export async function fetchMyProfile(
   userId: string,
   email: string,
 ): Promise<{ user: CurrentUser; prefs: NotificationPrefs } | null> {
-  const { data, error } = await requireSupabase()
-    .from('profiles')
-    .select('id, name, phone, community, xp, trades_count, rating_avg, notification_prefs')
-    .eq('id', userId)
-    .maybeSingle<ProfileRow>();
+  // Own full profile through an RPC: the phone column isn't readable directly (anti-scraping).
+  const { data: rows, error } = await requireSupabase().rpc('get_my_profile');
   if (error) throw error;
+  const data = ((rows ?? []) as ProfileRow[]).find((r) => r.id === userId);
   if (!data) return null;
   return { user: toCurrentUser(data, email), prefs: { ...DEFAULT_PREFS, ...(data.notification_prefs ?? {}) } };
 }
@@ -143,7 +144,6 @@ type FeedRow = {
   photo_path: string | null;
   created_at: string;
   seller_name: string;
-  seller_phone: string | null;
   seller_level: number;
   seller_trades: number;
   seller_rating: number | null;
@@ -182,7 +182,6 @@ export async function fetchFeed(): Promise<{ listings: Listing[]; sellers: Selle
         level: r.seller_level,
         trades: r.seller_trades,
         rating: r.seller_rating === null ? null : Number(r.seller_rating),
-        whatsapp: r.seller_phone ?? '',
       });
     }
     return {
@@ -221,9 +220,11 @@ export type CreateListingInput = Omit<Listing, 'id' | 'createdAt' | 'sellerId' |
 async function uploadPhoto(userId: string, photo: NewPhoto): Promise<string> {
   const ext = photo.mimeType === 'image/png' ? 'png' : photo.mimeType === 'image/webp' ? 'webp' : 'jpg';
   const path = `${userId}/${Date.now()}.${ext}`;
+  // Second safety net after preparePhoto(): drop any EXIF / GPS / XMP segments left in the bytes.
+  const bytes = stripJpegMetadata(base64ToBytes(photo.base64));
   const { error } = await requireSupabase()
     .storage.from(LISTING_PHOTOS_BUCKET)
-    .upload(path, base64ToBytes(photo.base64), { contentType: photo.mimeType, upsert: false });
+    .upload(path, bytes, { contentType: photo.mimeType, upsert: false });
   if (error) throw error;
   return path;
 }
@@ -300,6 +301,8 @@ type TradeRow = {
   completed_at: string | null;
   created_at: string;
   i_rated: boolean;
+  xp_awarded: boolean;
+  can_rate: boolean;
 };
 
 export async function fetchTrades(): Promise<Trade[]> {
@@ -318,6 +321,8 @@ export async function fetchTrades(): Promise<Trade[]> {
     completedAt: r.completed_at ?? undefined,
     createdAt: r.created_at,
     iRated: r.i_rated,
+    xpAwarded: r.xp_awarded,
+    canRate: r.can_rate,
   }));
 }
 
@@ -407,6 +412,40 @@ export async function markNotificationsRead(ids?: string[]) {
 }
 
 // ---------------------------------------------------------------------------
+// Contact, reports and blocks
+// ---------------------------------------------------------------------------
+
+/** The seller's WhatsApp number for one listing (logged and rate limited on the server). */
+export async function getSellerWhatsapp(listingId: string): Promise<string> {
+  const { data, error } = await requireSupabase().rpc('get_seller_whatsapp', { p_listing_id: listingId });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function reportListing(listingId: string, sellerId: string, reason: ReportReason) {
+  const { error } = await requireSupabase()
+    .from('reports')
+    .insert({ reported_user_id: sellerId, listing_id: listingId, reason });
+  if (error) throw error;
+}
+
+export async function blockUser(userId: string) {
+  const { error } = await requireSupabase().from('blocks').insert({ blocked_id: userId });
+  if (error && error.code !== '23505') throw error; // already blocked is fine
+}
+
+export async function unblockUser(me: string, userId: string) {
+  const { error } = await requireSupabase().from('blocks').delete().eq('blocker_id', me).eq('blocked_id', userId);
+  if (error) throw error;
+}
+
+export async function fetchBlocks(): Promise<BlockedUser[]> {
+  const { data, error } = await requireSupabase().rpc('my_blocks');
+  if (error) throw error;
+  return ((data ?? []) as { user_id: string; name: string }[]).map((b) => ({ id: b.user_id, name: b.name }));
+}
+
+// ---------------------------------------------------------------------------
 // Push notifications
 // ---------------------------------------------------------------------------
 
@@ -443,8 +482,16 @@ export function errorMessage(error: unknown): string {
   if (/token has expired|invalid.*otp|otp.*invalid|Token has expired or is invalid/i.test(message)) {
     return 'הקוד לא נכון או שפג תוקפו. נסו שוב.';
   }
+  if (/location required/i.test(message)) return 'כדי לפרסם צריך קודם לשתף מיקום משוער בלהבים.';
+  if (/outside community/i.test(message)) return 'נראה שהמיקום מחוץ ללהבים. כרגע שוקי פעיל רק בלהבים.';
+  if (/too many listings/i.test(message)) return 'אפשר לפרסם עד 10 מוצרים חדשים ביממה.';
+  if (/too many trades/i.test(message)) return 'הגעת למקסימום העסקאות החדשות להיום. נסו שוב מחר.';
+  if (/too many contacts/i.test(message)) return 'פנית להרבה מוכרים היום. נסו שוב מחר.';
+  if (/too many reports/i.test(message)) return 'שלחת הרבה דיווחים היום. נבדוק אותם בהקדם.';
+  if (/not available/i.test(message)) return 'המוצר או המשתמש כבר לא זמינים.';
   if (/rate limit|too many|security purposes/i.test(message)) return 'יותר מדי ניסיונות. חכו כמה דקות ונסו שוב.';
   if (/invalid.*email|email.*invalid|unable to validate email/i.test(message)) return 'כתובת המייל לא תקינה.';
+  if (/captcha/i.test(message)) return 'בדיקת האבטחה נכשלה. נסו שוב.';
   if (/network|fetch/i.test(message)) return 'אין חיבור לאינטרנט. בדקו את החיבור ונסו שוב.';
   if (/payload too large|exceeded the maximum allowed size/i.test(message)) return 'התמונה גדולה מדי. נסו תמונה אחרת.';
   return 'משהו השתבש. נסו שוב בעוד רגע.';

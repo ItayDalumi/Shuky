@@ -5,6 +5,7 @@ import * as Location from 'expo-location';
 import { Lock, MapPin } from 'lucide-react-native';
 
 import { AppText, Button, Pill, Screen } from '@/components';
+import { errorMessage } from '@/lib/api';
 import { finishOnboarding } from '@/lib/navigation';
 import { useAppStore } from '@/store/AppStore';
 import { colors, spacing } from '@/theme';
@@ -31,8 +32,13 @@ export default function LocationScreen() {
       const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       await saveLocation(position.coords.latitude, position.coords.longitude);
       finishOnboarding(router);
-    } catch {
-      setNote('לא הצלחנו לקבל את המיקום. אפשר להמשיך בלי, ולנסות שוב אחר כך.');
+    } catch (e) {
+      const message = errorMessage(e);
+      setNote(
+        message.includes('מחוץ ללהבים')
+          ? message
+          : 'לא הצלחנו לקבל את המיקום. אפשר להמשיך בלי (רק לא לפרסם מוצרים), ולנסות שוב אחר כך.',
+      );
     } finally {
       setWorking(false);
     }

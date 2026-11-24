@@ -145,9 +145,9 @@ function Completed({ trade }: { trade: Trade }) {
   const [error, setError] = useState<string | null>(null);
   const first = trade.otherName.split(' ')[0];
 
-  // user.xp already includes this trade's XP; animate from where it was.
+  // user.xp already includes this trade's XP (if any); animate from where it was.
   const after = getLevelInfo(user.xp);
-  const before = getLevelInfo(Math.max(0, user.xp - XP_PER_TRADE));
+  const before = getLevelInfo(Math.max(0, user.xp - (trade.xpAwarded ? XP_PER_TRADE : 0)));
   const target = after.nextLevelXp ?? after.xp;
 
   const sendRating = async () => {
@@ -186,12 +186,18 @@ function Completed({ trade }: { trade: Trade }) {
             </AppText>
           </View>
 
-          <View style={styles.xpPill} accessibilityLabel={`קיבלת ${XP_PER_TRADE} נקודות ניסיון`}>
-            <Trophy size={26} color={colors.honeyDark} strokeWidth={2} />
-            <AppText variant="title" color={colors.honeyDark}>
-              {ltr(`+${XP_PER_TRADE} XP`)}
+          {trade.xpAwarded ? (
+            <View style={styles.xpPill} accessibilityLabel={`קיבלת ${XP_PER_TRADE} נקודות ניסיון`}>
+              <Trophy size={26} color={colors.honeyDark} strokeWidth={2} />
+              <AppText variant="title" color={colors.honeyDark}>
+                {ltr(`+${XP_PER_TRADE} XP`)}
+              </AppText>
+            </View>
+          ) : (
+            <AppText variant="small" color={colors.muted} center>
+              {`העסקה נרשמה. נקודות ניתנות על עסקה אחת עם אותו שכן בשבוע, ועד 3 עסקאות ביום.`}
             </AppText>
-          </View>
+          )}
 
           <View style={styles.card}>
             <View style={styles.progressRow}>
@@ -212,6 +218,10 @@ function Completed({ trade }: { trade: Trade }) {
           {trade.iRated ? (
             <AppText variant="small" color={colors.leafDark} center>
               {`תודה על הדירוג! הוא עוזר לשכנים לבחור.`}
+            </AppText>
+          ) : !trade.canRate ? (
+            <AppText variant="small" color={colors.muted} center>
+              {`כבר דירגת את ${first} החודש. אפשר לדרג כל שכן פעם בחודש.`}
             </AppText>
           ) : (
             <View style={styles.card}>

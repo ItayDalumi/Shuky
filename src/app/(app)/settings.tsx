@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Star,
   Trash2,
+  UserX,
   type LucideIcon,
 } from 'lucide-react-native';
 
@@ -196,6 +197,7 @@ export default function SettingsScreen() {
           </Section>
 
           <Section title="חשבון">
+            <Row icon={UserX} label="משתמשים חסומים" onPress={() => router.push('/blocked')} />
             <Row icon={LogOut} label="התנתקות" onPress={onSignOut} />
             <Row icon={Trash2} label="מחיקת חשבון" danger onPress={onDeleteAccount} last />
           </Section>
