@@ -140,7 +140,8 @@ create trigger reports_guard
   before insert on public.reports
   for each row execute function public.reports_guard();
 
--- Three different people reporting the same listing hides it until the operator reviews it.
+-- Three different established neighbors (location in the community, account 3+ days old) reporting
+-- the same listing hide it until the operator reviews it. Fresh throwaway accounts don't count.
 create function public.reports_autohide()
 returns trigger
 language plpgsql
@@ -149,7 +150,13 @@ set search_path = ''
 as $$
 begin
   if new.listing_id is not null and (
-    select count(distinct reporter_id) from public.reports where listing_id = new.listing_id and status = 'open'
+    select count(distinct r.reporter_id)
+    from public.reports r
+    join public.profiles p on p.id = r.reporter_id
+    where r.listing_id = new.listing_id
+      and r.status = 'open'
+      and p.created_at < now() - interval '3 days'
+      and exists (select 1 from public.profile_locations pl where pl.profile_id = r.reporter_id)
   ) >= 3 then
     update public.listings set is_active = false where id = new.listing_id;
   end if;

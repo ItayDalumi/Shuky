@@ -209,6 +209,19 @@ do $$ declare lid uuid; begin
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
 insert into public.reports (reported_user_id, listing_id, reason) select '00000000-0000-0000-0000-00000000000b', id, 'fake' from public.listings where title = 'חלה';
+-- three brand-new accounts are not enough to hide a listing
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+insert into public.reports (reported_user_id, listing_id, reason) select '00000000-0000-0000-0000-00000000000b', id, 'spam' from public.listings where title = 'חלה';
+do $$ begin
+  assert (select count(*) from public.nearby_listings() where title = 'חלה') = 1, 'new accounts cannot auto-hide';
+  raise notice 'PASS reports from brand-new accounts don''t auto-hide a listing';
+end $$;
+reset role;
+update public.profiles set created_at = now() - interval '10 days'
+where id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000c', '00000000-0000-0000-0000-00000000000d');
+delete from public.reports where reporter_id = '00000000-0000-0000-0000-00000000000d';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
 do $$ begin
   assert (select count(*) from public.nearby_listings() where title = 'חלה') = 1, 'still visible after 2';
 end $$;

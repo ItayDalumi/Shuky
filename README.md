@@ -47,7 +47,7 @@ so new users enter one on the name screen (it isn't verified).
 1. Create a project at [supabase.com](https://supabase.com) (region: Frankfurt is closest to Israel).
 2. **SQL Editor** → run each file in `supabase/migrations/` **in order** (paste → **Run**):
    `20261121120000_init.sql`, `20261122090000_email_auth.sql`, `20261122140000_phase3.sql`,
-   then `20261123090000_push.sql`.
+   `20261123090000_push.sql`, then `20261124090000_security.sql`.
    This creates the tables, the security rules (RLS), the feed / trade / rating / notification
    functions and the `listing-photos` bucket.
 3. **Email code** (free; the Email provider is on by default):
@@ -75,6 +75,26 @@ Service, straight from the database (`pg_net`, enabled by the push migration). N
    Notification preferences apply to pushes too. Signing out removes this device.
 
 In demo mode the phone shows a local notification when a demo trade completes.
+
+## Security
+
+Enforced in the database (RLS, column grants, `SECURITY DEFINER` functions), not just in the app.
+`supabase/tests` holds 78 checks; run them with `supabase/tests/run.sh`.
+
+- **Privacy:** locations are rounded on the phone, snapped to ~100 m and never readable by others;
+  the feed shows a rounded distance only. Phone numbers can't be read in bulk: the WhatsApp number
+  of one seller is returned only when tapping "order" (`get_seller_whatsapp()`, logged, max 20 new
+  sellers a day). Photos are re-encoded and stripped of EXIF / GPS before upload.
+- **Integrity:** XP, rating and phone are server-managed. XP needs both sides to confirm, once per
+  pair of neighbors per 7 days, max 3 XP trades a day. One rating per neighbor per 30 days.
+- **Abuse:** rate limits on listings (10/day), trades (15/day), reports (20/day). Location must be
+  inside the community area to post. Report & block (blocks hide listings, notifications, contact
+  and trades both ways). A listing reported by 3 established neighbors is hidden until reviewed:
+  check **Table Editor → reports** in Supabase regularly (Apple expects reports to be handled).
+- **Optional CAPTCHA (free):** create a Cloudflare Turnstile widget (add the hostname from
+  `EXPO_PUBLIC_TURNSTILE_BASE_URL`), put its secret in Supabase → Authentication → Attack
+  Protection, and its site key in `.env` as `EXPO_PUBLIC_TURNSTILE_SITE_KEY`.
+- After running the migrations, open Supabase → **Advisors → Security** and fix anything it flags.
 
 ## Privacy policy & terms
 
