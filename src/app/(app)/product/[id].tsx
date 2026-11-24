@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowRight, CalendarClock, Clock, Handshake, Heart, PackageSearch } from 'lucide-react-native';
+import { ArrowRight, CalendarClock, Clock, Flag, Handshake, Heart, PackageSearch } from 'lucide-react-native';
 
 import {
   AppText,
@@ -11,10 +11,12 @@ import {
   IconButton,
   Pill,
   Screen,
+  SelectSheet,
   SellerCard,
   WhatsAppIcon,
 } from '@/components';
 import { CATEGORIES, DIETARY_LABELS } from '@/data/categories';
+import type { ReportReason } from '@/data/types';
 import { errorMessage } from '@/lib/api';
 import { confirmAction } from '@/lib/confirm';
 import { availabilityLabel, formatPriceLine, noticeLabel } from '@/lib/format';
@@ -27,7 +29,22 @@ import { border, colors, radius, spacing } from '@/theme';
 /** 06 · עמוד מוצר */
 export default function ProductScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getListing, getSeller, isSaved, toggleSaved, user, openTradeFor, markBought, deleteListing } = useAppStore();
+  const {
+    getListing,
+    getSeller,
+    isSaved,
+    toggleSaved,
+    user,
+    openTradeFor,
+    markBought,
+    deleteListing,
+    getWhatsapp,
+    reportListing,
+    blockUser,
+  } = useAppStore();
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [reasonsOpen, setReasonsOpen] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,13 +73,17 @@ export default function ProductScreen() {
   const preorder = listing.availability === 'preorder';
 
   // No in-app chat or payments: ordering happens in WhatsApp, payment between neighbors.
+  // The number is fetched only when the buyer taps "order" (logged + rate limited, so it can't be scraped).
   const order = () =>
-    openWhatsApp(
-      seller.whatsapp,
-      preorder
-        ? `היי ${firstName}! ראיתי בשוקי את "${listing.title}" ואשמח להזמין מראש. לאיזה תאריך אפשר?`
-        : `היי ${firstName}! ראיתי בשוקי את "${listing.title}" ואשמח להזמין 🙂 זה עדיין זמין?`,
-    );
+    run(async () => {
+      const phone = await getWhatsapp(listing.id);
+      await openWhatsApp(
+        phone,
+        preorder
+          ? `היי ${firstName}! ראיתי בשוקי את "${listing.title}" ואשמח להזמין מראש. לאיזה תאריך אפשר?`
+          : `היי ${firstName}! ראיתי בשוקי את "${listing.title}" ואשמח להזמין 🙂 זה עדיין זמין?`,
+      );
+    });
 
   const openTrade = openTradeFor(listing.id);
 
@@ -89,6 +110,31 @@ export default function ProductScreen() {
           const tradeId = await markBought(listing.id);
           router.push(`/trade/${tradeId}`);
         }),
+    });
+
+  const onAction = (action: 'report' | 'block') => {
+    if (action === 'report') {
+      // Let the first sheet finish closing before the next one opens.
+      setTimeout(() => setReasonsOpen(true), 350);
+      return;
+    }
+    confirmAction({
+      title: `לחסום את ${seller.name}?`,
+      message: 'לא תראו יותר את המוצרים אחד של השני, ולא תוכלו ליצור קשר או לסגור עסקאות. אפשר לבטל בהגדרות.',
+      confirmLabel: 'חסימה',
+      destructive: true,
+      onConfirm: () =>
+        run(async () => {
+          await blockUser(seller.id);
+          goBack(router, '/home');
+        }),
+    });
+  };
+
+  const onReport = (reason: ReportReason) =>
+    run(async () => {
+      await reportListing(listing.id, reason);
+      setNote('תודה! הדיווח נשלח ונבדוק אותו בהקדם.');
     });
 
   const onDelete = () =>
@@ -128,6 +174,14 @@ export default function ProductScreen() {
             onPress={() => toggleSaved(listing.id)}
             style={[styles.overlayButton, styles.overlayEnd]}
           />
+          {!isMine ? (
+            <IconButton
+              icon={Flag}
+              accessibilityLabel="דיווח או חסימה"
+              onPress={() => setActionsOpen(true)}
+              style={[styles.overlayButton, styles.overlayEndSecond]}
+            />
+          ) : null}
         </View>
 
         <View style={styles.body}>
@@ -174,6 +228,11 @@ export default function ProductScreen() {
         {error ? (
           <AppText variant="small" color={colors.tomatoDark} center>
             {error}
+          </AppText>
+        ) : null}
+        {note ? (
+          <AppText variant="small" color={colors.leafDark} center>
+            {note}
           </AppText>
         ) : null}
         {isMine ? (
@@ -223,6 +282,30 @@ export default function ProductScreen() {
           </>
         )}
       </View>
+      <SelectSheet
+        visible={actionsOpen}
+        title="מה תרצו לעשות?"
+        options={[
+          { key: 'report' as const, label: 'דיווח על המוצר' },
+          { key: 'block' as const, label: `חסימת ${seller.name}` },
+        ]}
+        onSelect={onAction}
+        onClose={() => setActionsOpen(false)}
+      />
+      <SelectSheet
+        visible={reasonsOpen}
+        title="למה לדווח?"
+        options={[
+          { key: 'unsafe_food' as const, label: 'מזון לא בטוח או מקולקל' },
+          { key: 'fake' as const, label: 'מוצר מזויף או מטעה' },
+          { key: 'inappropriate' as const, label: 'תוכן לא הולם' },
+          { key: 'spam' as const, label: 'ספאם או פרסומת' },
+          { key: 'harassment' as const, label: 'הטרדה' },
+          { key: 'other' as const, label: 'אחר' },
+        ]}
+        onSelect={onReport}
+        onClose={() => setReasonsOpen(false)}
+      />
     </Screen>
   );
 }
@@ -235,6 +318,7 @@ const styles = StyleSheet.create({
   overlayButton: { position: 'absolute', top: spacing.sm },
   overlayStart: { start: spacing.screen },
   overlayEnd: { end: spacing.screen },
+  overlayEndSecond: { end: spacing.screen + 52 },
   body: {
     gap: spacing.sm,
     paddingTop: spacing.lg,

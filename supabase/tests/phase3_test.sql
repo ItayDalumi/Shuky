@@ -9,10 +9,13 @@ $$ select set_config('request.jwt.claim.sub', u, false) $$;
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 insert into public.profiles (id, name, phone) values (auth.uid(), 'איתי', '972501111111');
+select public.set_my_location(31.372, 34.816);
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
 insert into public.profiles (id, name, phone) values (auth.uid(), 'מיכל', '972503333333');
+select public.set_my_location(31.373, 34.815);
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 insert into public.profiles (id, name, phone) values (auth.uid(), 'דנה', '972502222222');
+select public.set_my_location(31.375, 34.817);
 
 -- ---------- new listing notifies neighbors (respecting prefs) ----------
 insert into public.listings (title, category, price, availability, baked_at) values ('עוגיות', 'cookies', 25, 'ready', current_date);

@@ -15,14 +15,14 @@ set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 insert into public.profiles (id, name, phone) values (auth.uid(), 'איתי', '972501111111');
 do $$ begin
-  assert (select phone from public.profiles where id = auth.uid()) = '972501111111', 'phone saved';
+  assert (select phone from public.get_my_profile()) = '972501111111', 'phone saved';
   raise notice 'PASS profile created with WhatsApp phone';
   begin
     update public.profiles set phone = '12345' where id = auth.uid();
     raise exception 'FAIL bad phone accepted';
   exception when check_violation then raise notice 'PASS phone must be an Israeli mobile (9725XXXXXXXX)'; end;
   update public.profiles set phone = '972501111112' where id = auth.uid();
-  assert (select phone from public.profiles where id = auth.uid()) = '972501111112', 'phone updated';
+  assert (select phone from public.get_my_profile()) = '972501111112', 'phone updated';
   raise notice 'PASS users can update their own phone';
   begin
     update public.profiles set xp = 999 where id = auth.uid();
@@ -139,7 +139,7 @@ do $$ declare tid uuid; begin
   begin
     insert into public.ratings (trade_id, ratee_id, stars) values (tid, '00000000-0000-0000-0000-00000000000b', 1);
     raise exception 'FAIL double rating';
-  exception when unique_violation then raise notice 'PASS one rating per side per trade'; end;
+  exception when unique_violation or insufficient_privilege then raise notice 'PASS one rating per side per trade'; end;
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
 do $$ declare tid uuid; begin

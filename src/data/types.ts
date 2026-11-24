@@ -15,8 +15,8 @@ export type Seller = {
   trades: number;
   /** null until the first rating */
   rating: number | null;
-  /** Used only to build the wa.me deep link */
-  whatsapp: string;
+  /** Demo mode only. Live mode asks the server for it when the buyer taps "order" (anti-scraping). */
+  whatsapp?: string;
 };
 
 export type Listing = {
@@ -94,4 +94,12 @@ export type Trade = {
   completedAt?: string;
   createdAt: string;
   iRated: boolean;
+  /** XP is given once per pair of neighbors per 7 days (max 3 a day) */
+  xpAwarded: boolean;
+  /** One rating per neighbor per 30 days */
+  canRate: boolean;
 };
+
+export type ReportReason = 'spam' | 'inappropriate' | 'unsafe_food' | 'fake' | 'harassment' | 'other';
+
+export type BlockedUser = { id: string; name: string };

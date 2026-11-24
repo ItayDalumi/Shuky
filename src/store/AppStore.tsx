@@ -21,7 +21,16 @@ import {
   initialTrades,
   sellers as demoSellers,
 } from '@/data/mock';
-import type { AppNotification, CurrentUser, Listing, NotificationPrefs, Seller, Trade } from '@/data/types';
+import type {
+  AppNotification,
+  BlockedUser,
+  CurrentUser,
+  Listing,
+  NotificationPrefs,
+  ReportReason,
+  Seller,
+  Trade,
+} from '@/data/types';
 import * as api from '@/lib/api';
 import { getLevelInfo, XP_PER_TRADE } from '@/lib/levels';
 import { getRegisteredToken, setRegisteredToken, showLocalNotification } from '@/lib/push';
@@ -42,8 +51,8 @@ type AppStore = {
   user: CurrentUser;
 
   // Auth & profile
-  /** Emails a one-time code */
-  sendOtp: (email: string) => Promise<void>;
+  /** Emails a one-time code (captchaToken when Turnstile is enabled) */
+  sendOtp: (email: string, captchaToken?: string) => Promise<void>;
   /** Returns what comes next: the name screen for new users, or the app. */
   verifyOtp: (email: string, code: string) => Promise<'needsProfile' | 'ready'>;
   /** phone: the WhatsApp number neighbors use to order */
@@ -80,6 +89,15 @@ type AppStore = {
   confirmTrade: (tradeId: string) => Promise<void>;
   declineTrade: (tradeId: string) => Promise<void>;
   rateTrade: (tradeId: string, stars: number, comment: string) => Promise<void>;
+
+  // Contact, reports & blocks
+  /** The seller's WhatsApp number for this listing (live: fetched on demand, rate limited) */
+  getWhatsapp: (listingId: string) => Promise<string>;
+  reportListing: (listingId: string, reason: ReportReason) => Promise<void>;
+  blockedUsers: BlockedUser[];
+  refreshBlocks: () => Promise<void>;
+  blockUser: (userId: string) => Promise<void>;
+  unblockUser: (userId: string) => Promise<void>;
 
   // Saved
   savedListings: Listing[];
@@ -130,6 +148,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   const [savedIds, setSavedIds] = useState<string[]>(live ? [] : ['l2']);
   const [notifications, setNotifications] = useState<AppNotification[]>(live ? [] : initialNotifications);
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
+  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
 
   // Latest user / trades, for async callbacks (demo timers, reloads).
   const userRef = useRef(user);
@@ -181,6 +200,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       api.fetchTrades().then(setTrades).catch(() => {});
       api.fetchSavedIds().then(setSavedIds).catch(() => {});
       api.fetchNotifications().then(setNotifications).catch(() => {});
+      api.fetchBlocks().then(setBlockedUsers).catch(() => {});
       return 'ready';
     },
     [refreshFeed],
@@ -208,6 +228,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         setSavedIds([]);
         setNotifications([]);
         setNotificationPrefs(DEFAULT_PREFS);
+        setBlockedUsers([]);
         setAuthStatus('signedOut');
         return;
       }
@@ -234,8 +255,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   // Auth & profile
   // ---------------------------------------------------------------------------
   const sendOtp = useCallback(
-    async (email: string) => {
-      if (live) await api.sendOtp(email);
+    async (email: string, captchaToken?: string) => {
+      if (live) await api.sendOtp(email, captchaToken);
     },
     [live],
   );
@@ -388,7 +409,9 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     if (!trade || trade.completedAt) return;
     const completedAt = new Date().toISOString();
     setTrades((prev) =>
-      prev.map((t) => (t.id === tradeId ? { ...t, iConfirmed: true, otherConfirmed: true, completedAt } : t)),
+      prev.map((t) =>
+        t.id === tradeId ? { ...t, iConfirmed: true, otherConfirmed: true, completedAt, xpAwarded: true } : t,
+      ),
     );
     setUser((u) => ({ ...u, xp: u.xp + XP_PER_TRADE, trades: u.trades + 1 }));
     // Demo: show it on the phone like a real push would.
@@ -428,6 +451,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         otherConfirmed: false,
         createdAt: new Date().toISOString(),
         iRated: false,
+        xpAwarded: false,
+        canRate: true,
       };
       setTrades((prev) => [trade, ...prev]);
       // Demo: the seller confirms a few seconds later.
@@ -476,6 +501,50 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   );
 
   // ---------------------------------------------------------------------------
+  // Contact, reports & blocks
+  // ---------------------------------------------------------------------------
+  const getWhatsapp = useCallback(
+    async (listingId: string) => {
+      if (live) return api.getSellerWhatsapp(listingId);
+      const listing = listings.find((l) => l.id === listingId);
+      return sellers.find((s) => s.id === listing?.sellerId)?.whatsapp ?? '';
+    },
+    [live, listings, sellers],
+  );
+
+  const reportListing = useCallback(
+    async (listingId: string, reason: ReportReason) => {
+      const listing = listings.find((l) => l.id === listingId);
+      if (!listing) return;
+      if (live) await api.reportListing(listingId, listing.sellerId, reason);
+    },
+    [live, listings],
+  );
+
+  const refreshBlocks = useCallback(async () => {
+    if (live) setBlockedUsers(await api.fetchBlocks());
+  }, [live]);
+
+  const blockUser = useCallback(
+    async (userId: string) => {
+      if (live) await api.blockUser(userId);
+      const name = sellers.find((s) => s.id === userId)?.name ?? '';
+      setBlockedUsers((prev) => (prev.some((b) => b.id === userId) ? prev : [{ id: userId, name }, ...prev]));
+      if (live) await refreshFeed();
+    },
+    [live, sellers, refreshFeed],
+  );
+
+  const unblockUser = useCallback(
+    async (userId: string) => {
+      if (live) await api.unblockUser(user.id, userId);
+      setBlockedUsers((prev) => prev.filter((b) => b.id !== userId));
+      if (live) await refreshFeed();
+    },
+    [live, user.id, refreshFeed],
+  );
+
+  // ---------------------------------------------------------------------------
   // Saved
   // ---------------------------------------------------------------------------
   const isSaved = useCallback((id: string) => savedIds.includes(id), [savedIds]);
@@ -517,7 +586,11 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   );
 
   const value = useMemo<AppStore>(() => {
-    const byNewest = [...listings].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    // Live: the server already hides blocked users; demo: filter here.
+    const blockedIds = new Set(blockedUsers.map((b) => b.id));
+    const byNewest = [...listings]
+      .filter((l) => !blockedIds.has(l.sellerId))
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     return {
       mode,
       authStatus,
@@ -548,7 +621,15 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       confirmTrade,
       declineTrade,
       rateTrade,
-      savedListings: savedIds.map((id) => listings.find((l) => l.id === id)).filter((l): l is Listing => !!l),
+      getWhatsapp,
+      reportListing,
+      blockedUsers,
+      refreshBlocks,
+      blockUser,
+      unblockUser,
+      savedListings: savedIds
+        .map((id) => byNewest.find((l) => l.id === id))
+        .filter((l): l is Listing => !!l),
       isSaved,
       toggleSaved,
       notifications,
@@ -588,6 +669,12 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     declineTrade,
     rateTrade,
     savedIds,
+    getWhatsapp,
+    reportListing,
+    blockedUsers,
+    refreshBlocks,
+    blockUser,
+    unblockUser,
     isSaved,
     toggleSaved,
     notifications,

@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
-import { AppText, Button, Input, Screen, StepHeader } from '@/components';
+import { AppText, Button, Captcha, Input, Screen, StepHeader } from '@/components';
 import { errorMessage } from '@/lib/api';
+import { captchaEnabled } from '@/lib/captcha';
 import { isValidEmail } from '@/lib/format';
 import { useAppStore } from '@/store/AppStore';
 import { colors, spacing } from '@/theme';
@@ -15,19 +16,27 @@ export default function EmailScreen() {
   const [email, setEmail] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState('');
+  // Tokens are single use: remount the widget for a fresh one after each attempt.
+  const [captchaKey, setCaptchaKey] = useState(0);
   const valid = isValidEmail(email);
+  const ready = valid && (!captchaEnabled || captchaToken.length > 0);
 
   const submit = async () => {
-    if (!valid || sending) return;
+    if (!ready || sending) return;
     setSending(true);
     setError(null);
     try {
-      await sendOtp(email);
+      await sendOtp(email, captchaEnabled ? captchaToken : undefined);
       router.push({ pathname: '/otp', params: { email: email.trim().toLowerCase() } });
     } catch (e) {
       setError(errorMessage(e));
     } finally {
       setSending(false);
+      if (captchaEnabled) {
+        setCaptchaToken('');
+        setCaptchaKey((k) => k + 1);
+      }
     }
   };
 
@@ -64,6 +73,8 @@ export default function EmailScreen() {
 
           <View style={styles.spacer} />
 
+          {captchaEnabled ? <Captcha key={captchaKey} onToken={setCaptchaToken} /> : null}
+
           <AppText variant="caption" color={colors.muted} center>
             {'בלחיצה על המשך את/ה מאשר/ת את '}
             <AppText
@@ -86,7 +97,7 @@ export default function EmailScreen() {
               מדיניות הפרטיות
             </AppText>
           </AppText>
-          <Button label="שלחו לי קוד" onPress={submit} disabled={!valid} loading={sending} />
+          <Button label="שלחו לי קוד" onPress={submit} disabled={!ready} loading={sending} />
         </ScrollView>
       </KeyboardAvoidingView>
     </Screen>

@@ -4,8 +4,9 @@ import { router, useLocalSearchParams } from 'expo-router';
 
 import { AppText, Button, OtpInput, Screen, StepHeader, type OtpInputHandle } from '@/components';
 import { errorMessage } from '@/lib/api';
+import { captchaEnabled } from '@/lib/captcha';
 import { formatCountdown } from '@/lib/format';
-import { finishOnboarding } from '@/lib/navigation';
+import { finishOnboarding, goBack } from '@/lib/navigation';
 import { ltr } from '@/lib/rtl';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useAppStore } from '@/store/AppStore';
@@ -57,6 +58,8 @@ export default function OtpScreen() {
   };
 
   const resend = async () => {
+    // With CAPTCHA on, a new code needs a new check: go back to the email screen.
+    if (captchaEnabled) return goBack(router, '/email');
     setCode('');
     setError(null);
     setSecondsLeft(RESEND_SECONDS);
