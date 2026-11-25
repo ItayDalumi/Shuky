@@ -100,6 +100,6 @@ export type Trade = {
   canRate: boolean;
 };
 
-export type ReportReason = 'spam' | 'inappropriate' | 'unsafe_food' | 'fake' | 'harassment' | 'other';
+export type ReportReason = 'spam' | 'inappropriate' | 'unsafe_food' | 'fake' | 'harassment' | 'dangerous' | 'other';
 
 export type BlockedUser = { id: string; name: string };

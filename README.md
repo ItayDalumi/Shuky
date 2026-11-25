@@ -47,7 +47,7 @@ so new users enter one on the name screen (it isn't verified).
 1. Create a project at [supabase.com](https://supabase.com) (region: Frankfurt is closest to Israel).
 2. **SQL Editor** → run each file in `supabase/migrations/` **in order** (paste → **Run**):
    `20261121120000_init.sql`, `20261122090000_email_auth.sql`, `20261122140000_phase3.sql`,
-   `20261123090000_push.sql`, then `20261124090000_security.sql`.
+   `20261123090000_push.sql`, `20261124090000_security.sql`, then `20261125090000_compliance.sql`.
    This creates the tables, the security rules (RLS), the feed / trade / rating / notification
    functions and the `listing-photos` bucket.
 3. **Email code** (free; the Email provider is on by default):
@@ -95,6 +95,20 @@ Enforced in the database (RLS, column grants, `SECURITY DEFINER` functions), not
   `EXPO_PUBLIC_TURNSTILE_BASE_URL`), put its secret in Supabase → Authentication → Attack
   Protection, and its site key in `.env` as `EXPO_PUBLIC_TURNSTILE_SITE_KEY`.
 - After running the migrations, open Supabase → **Advisors → Security** and fix anything it flags.
+
+## Privacy & compliance checklist
+
+| Risk | How Shuky handles it |
+| --- | --- |
+| No privacy policy | In-app + public pages (`docs/privacy.html`), linked at sign-up |
+| Undisclosed data collection | Policy lists every field; ready answers for the store forms in `docs/store-privacy-answers.md`; Settings → הורדת המידע שלי exports everything (`export_my_data()`) |
+| Uploads not deleted | Deleting a listing, replacing a photo or deleting the account removes the files (account deletion aborts if the photos can't be removed). Old notifications / logs are purged nightly (`purge_old_data()` via pg_cron) |
+| Public storage buckets | `listing-photos` is private; only signed-in neighbors who can see the listing get short-lived signed URLs |
+| Fake testimonials | Mock data exists only in demo mode, labelled on the home screen; a production build without Supabase refuses to run the demo. Don't use demo screenshots in the store |
+| Hard to cancel / trial reminders | No subscriptions, trials or in-app payments (stated in the terms); account deletion is two taps |
+| Self-harm response | Settings → בטיחות ועזרה: ער״ן 1201, מד״א 101, משטרה 100 and safety tips; "פגיעה עצמית או סכנה לאדם" report reason opens it |
+
+This is not legal advice: Israeli privacy law (incl. Amendment 13) applies; have the texts reviewed.
 
 ## Privacy policy & terms
 

@@ -7,7 +7,7 @@ create schema auth;
 create schema storage;
 grant usage on schema public, extensions, auth, storage to anon, authenticated, service_role;
 
-create table auth.users (id uuid primary key, phone text);
+create table auth.users (id uuid primary key, phone text, email text, created_at timestamptz default now());
 create function auth.uid() returns uuid language sql stable as
   $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 

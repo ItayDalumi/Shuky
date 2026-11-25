@@ -150,8 +150,21 @@ type FeedRow = {
   distance_meters: number | null;
 };
 
-export function photoUrl(path: string): string {
-  return requireSupabase().storage.from(LISTING_PHOTOS_BUCKET).getPublicUrl(path).data.publicUrl;
+/** How long a photo link stays valid. Photos are private: only signed-in neighbors who can see the listing. */
+const PHOTO_URL_TTL_SECONDS = 60 * 60;
+
+/** Short-lived signed links for photos the user is allowed to see (path -> url). */
+async function signPhotoUrls(paths: string[]): Promise<Map<string, string>> {
+  const urls = new Map<string, string>();
+  if (paths.length === 0) return urls;
+  const { data, error } = await requireSupabase()
+    .storage.from(LISTING_PHOTOS_BUCKET)
+    .createSignedUrls(paths, PHOTO_URL_TTL_SECONDS);
+  if (error) return urls; // listings still show, with the category illustration
+  for (const item of data ?? []) {
+    if (item.path && item.signedUrl && !item.error) urls.set(item.path, item.signedUrl);
+  }
+  return urls;
 }
 
 /** "2026-11-21" (a calendar date) -> ISO timestamp at local midnight */
@@ -172,6 +185,7 @@ export async function fetchFeed(): Promise<{ listings: Listing[]; sellers: Selle
   const { data, error } = await requireSupabase().rpc('nearby_listings');
   if (error) throw error;
   const rows = (data ?? []) as FeedRow[];
+  const photoUrls = await signPhotoUrls([...new Set(rows.map((r) => r.photo_path).filter((p): p is string => !!p))]);
   const sellers = new Map<string, Seller>();
   const listings = rows.map((r): Listing => {
     if (!sellers.has(r.seller_id)) {
@@ -196,7 +210,7 @@ export async function fetchFeed(): Promise<{ listings: Listing[]; sellers: Selle
       noticeDays: r.notice_days ?? undefined,
       dietary: r.dietary,
       sellerId: r.seller_id,
-      photoUri: r.photo_path ? photoUrl(r.photo_path) : undefined,
+      photoUri: r.photo_path ? photoUrls.get(r.photo_path) : undefined,
       photoPath: r.photo_path ?? undefined,
       createdAt: r.created_at,
     };
@@ -277,11 +291,24 @@ export async function updateListing(userId: string, listing: Listing, input: Cre
   if (newPath && listing.photoPath) await client.storage.from(LISTING_PHOTOS_BUCKET).remove([listing.photoPath]);
 }
 
+/** Removes files from the photo bucket, retrying once; throws if they're still there. */
+async function removePhotos(paths: string[]) {
+  if (paths.length === 0) return;
+  const bucket = requireSupabase().storage.from(LISTING_PHOTOS_BUCKET);
+  for (let i = 0; i < paths.length; i += 100) {
+    const chunk = paths.slice(i, i + 100);
+    let { error } = await bucket.remove(chunk);
+    if (error) ({ error } = await bucket.remove(chunk));
+    if (error) throw error;
+  }
+}
+
 export async function deleteListing(listing: Listing) {
   const client = requireSupabase();
   const { error } = await client.from('listings').delete().eq('id', listing.id);
   if (error) throw error;
-  if (listing.photoPath) await client.storage.from(LISTING_PHOTOS_BUCKET).remove([listing.photoPath]);
+  // The listing is gone; don't fail the whole action if only the photo cleanup hiccups.
+  if (listing.photoPath) await removePhotos([listing.photoPath]).catch(() => {});
 }
 
 // ---------------------------------------------------------------------------
@@ -464,16 +491,32 @@ export async function removePushToken(token: string) {
 // Account
 // ---------------------------------------------------------------------------
 
-/** Removes the user's photos, then the account (profile, listings etc. cascade in the database). */
+/**
+ * Deletes ALL of the user's photos first (every page of their folder), then the account; profile,
+ * listings, trades, ratings, notifications etc. cascade in the database. If the photos can't be
+ * removed, the account is not deleted, so the user can retry and nothing is left behind.
+ */
 export async function deleteMyAccount(userId: string) {
   const client = requireSupabase();
-  const { data: files } = await client.storage.from(LISTING_PHOTOS_BUCKET).list(userId, { limit: 1000 });
-  if (files && files.length > 0) {
-    await client.storage.from(LISTING_PHOTOS_BUCKET).remove(files.map((f) => `${userId}/${f.name}`));
+  const bucket = client.storage.from(LISTING_PHOTOS_BUCKET);
+  const paths: string[] = [];
+  for (let offset = 0; ; offset += 100) {
+    const { data: files, error } = await bucket.list(userId, { limit: 100, offset });
+    if (error) throw error;
+    paths.push(...(files ?? []).map((f) => `${userId}/${f.name}`));
+    if (!files || files.length < 100) break;
   }
+  await removePhotos(paths);
   const { error } = await client.rpc('delete_my_account');
   if (error) throw error;
   await client.auth.signOut();
+}
+
+/** Everything the server holds about the signed-in user (right of access). */
+export async function exportMyData(): Promise<unknown> {
+  const { data, error } = await requireSupabase().rpc('export_my_data');
+  if (error) throw error;
+  return data;
 }
 
 /** Friendly Hebrew message for errors shown to the user. */
