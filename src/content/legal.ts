@@ -6,9 +6,8 @@
  * Template written for the app as built; have it reviewed by a lawyer before launch.
  */
 
-// TODO(owner): fill in before publishing.
-export const OPERATOR_NAME = 'מפעיל אפליקציית שוקי';
-export const CONTACT_EMAIL = 'contact@example.com';
+export const OPERATOR_NAME = 'איתי דלומי';
+export const CONTACT_EMAIL = 'itaydalumi4@gmail.com';
 export const LAST_UPDATED = '25 בנובמבר 2026';
 
 export type LegalBlock = { type: 'p'; text: string } | { type: 'list'; items: string[] };
