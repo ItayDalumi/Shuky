@@ -7,7 +7,9 @@ import {
   BellOff,
   BellRing,
   CakeSlice,
+  Download,
   FileText,
+  LifeBuoy,
   Lock,
   LogOut,
   Mail,
@@ -27,6 +29,7 @@ import { formatPhoneInput, isValidIsraeliMobile } from '@/lib/format';
 import { resetToWelcome } from '@/lib/navigation';
 import { ensurePermission, getPermissionState, type PermissionState } from '@/lib/push';
 import { ltr } from '@/lib/rtl';
+import { shareJson } from '@/lib/shareData';
 import { useAppStore } from '@/store/AppStore';
 import { border, colors, radius, spacing } from '@/theme';
 
@@ -38,7 +41,8 @@ const NOTIFICATION_ROWS: { key: keyof NotificationPrefs; icon: LucideIcon; label
 
 /** הגדרות. In live mode the name, sign out and delete account go to Supabase; toggles are still local (Phase 3). */
 export default function SettingsScreen() {
-  const { user, updateUser, signOut, deleteAccount, notificationPrefs, setNotificationPref } = useAppStore();
+  const { user, updateUser, signOut, deleteAccount, exportMyData, notificationPrefs, setNotificationPref } = useAppStore();
+  const [exporting, setExporting] = useState(false);
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone);
   const [permission, setPermission] = useState<PermissionState>('unsupported');
@@ -76,6 +80,19 @@ export default function SettingsScreen() {
     } catch (e) {
       setError(errorMessage(e));
       setPhone(user.phone);
+    }
+  };
+
+  const downloadMyData = async () => {
+    setExporting(true);
+    setError(null);
+    try {
+      const date = new Date().toISOString().slice(0, 10);
+      await shareJson(`shuky-my-data-${date}.json`, await exportMyData());
+    } catch (e) {
+      setError(errorMessage(e));
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -192,12 +209,19 @@ export default function SettingsScreen() {
           </Section>
 
           <Section title="מידע">
+            <Row icon={LifeBuoy} label="בטיחות ועזרה" onPress={() => router.push('/safety')} />
             <Row icon={ShieldCheck} label="מדיניות פרטיות" onPress={() => router.push('/legal/privacy')} />
             <Row icon={FileText} label="תנאי שימוש" onPress={() => router.push('/legal/terms')} last />
           </Section>
 
           <Section title="חשבון">
             <Row icon={UserX} label="משתמשים חסומים" onPress={() => router.push('/blocked')} />
+            <Row
+              icon={Download}
+              label={exporting ? 'מכינים את הקובץ…' : 'הורדת המידע שלי'}
+              hint="כל המידע שלך בשוקי, בקובץ אחד"
+              onPress={exporting ? undefined : downloadMyData}
+            />
             <Row icon={LogOut} label="התנתקות" onPress={onSignOut} />
             <Row icon={Trash2} label="מחיקת חשבון" danger onPress={onDeleteAccount} last />
           </Section>

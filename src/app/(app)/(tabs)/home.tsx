@@ -9,6 +9,7 @@ import {
   CategoryChips,
   EmptyState,
   IconButton,
+  Pill,
   ProductGrid,
   Screen,
   SearchField,
@@ -22,7 +23,7 @@ import { colors, spacing } from '@/theme';
 
 /** 05 · בית (פיד) */
 export default function HomeScreen() {
-  const { user, feed, unreadCount, feedLoading, feedError, refreshAll } = useAppStore();
+  const { user, feed, unreadCount, feedLoading, feedError, refreshAll, mode } = useAppStore();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CategoryFilter>('all');
 
@@ -56,6 +57,10 @@ export default function HomeScreen() {
             onPress={() => router.push('/notifications')}
           />
         </View>
+
+        {mode === 'demo' ? (
+          <Pill tone="honey" label="מצב הדגמה · המוכרים, המוצרים והדירוגים כאן לדוגמה בלבד" />
+        ) : null}
 
         <SearchField value={query} onChangeText={setQuery} />
 

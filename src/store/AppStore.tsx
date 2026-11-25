@@ -61,6 +61,8 @@ type AppStore = {
   updateUser: (patch: Partial<Pick<CurrentUser, 'name' | 'phone'>>) => Promise<void>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
+  /** Everything we hold about the user, as a plain object (right of access) */
+  exportMyData: () => Promise<unknown>;
 
   // Listings
   feed: Listing[];
@@ -321,6 +323,21 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   const deleteAccount = useCallback(async () => {
     if (live) await api.deleteMyAccount(user.id);
   }, [live, user.id]);
+
+  const exportMyData = useCallback(async () => {
+    if (live) return api.exportMyData();
+    // Demo: the same shape, from what's in memory.
+    return {
+      exported_at: new Date().toISOString(),
+      demo: true,
+      profile: user,
+      listings: listings.filter((l) => l.sellerId === user.id),
+      trades,
+      saved_listings: savedIds,
+      notifications,
+      blocked_users: blockedUsers,
+    };
+  }, [live, user, listings, trades, savedIds, notifications, blockedUsers]);
 
   // ---------------------------------------------------------------------------
   // Listings
@@ -602,6 +619,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       updateUser,
       signOut,
       deleteAccount,
+      exportMyData,
       feed: byNewest.filter((l) => l.sellerId !== user.id),
       myListings: byNewest.filter((l) => l.sellerId === user.id),
       feedLoading,
@@ -651,6 +669,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     updateUser,
     signOut,
     deleteAccount,
+    exportMyData,
     listings,
     feedLoading,
     feedError,

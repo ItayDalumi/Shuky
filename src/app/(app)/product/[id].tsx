@@ -135,6 +135,8 @@ export default function ProductScreen() {
     run(async () => {
       await reportListing(listing.id, reason);
       setNote('תודה! הדיווח נשלח ונבדוק אותו בהקדם.');
+      // Someone may be at risk: show where to get help right away.
+      if (reason === 'dangerous') router.push('/safety');
     });
 
   const onDelete = () =>
@@ -301,6 +303,7 @@ export default function ProductScreen() {
           { key: 'inappropriate' as const, label: 'תוכן לא הולם' },
           { key: 'spam' as const, label: 'ספאם או פרסומת' },
           { key: 'harassment' as const, label: 'הטרדה' },
+          { key: 'dangerous' as const, label: 'פגיעה עצמית או סכנה לאדם' },
           { key: 'other' as const, label: 'אחר' },
         ]}
         onSelect={onReport}
