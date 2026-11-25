@@ -119,8 +119,8 @@ One source, `src/content/legal.ts`, feeds both:
 
 Host them for free with GitHub Pages: repo **Settings → Pages → Deploy from a branch → `main` /
 `docs`**. The URLs become `https://itaydalumi.github.io/Shuky/privacy.html` and `.../terms.html`.
-Before launch: set `OPERATOR_NAME` and `CONTACT_EMAIL` in `src/content/legal.ts`, re-run the export,
-and have the text reviewed by a lawyer.
+Operator and contact are set in `src/content/legal.ts` (re-run `npm run legal:export` after any
+change). Have the text reviewed by a lawyer before launch.
 
 The database tests in `supabase/tests` check the security rules against a local Postgres + PostGIS
 (see `supabase/tests/run.sh`).
