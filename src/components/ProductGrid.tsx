@@ -1,10 +1,9 @@
 import { StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
 
 import type { Listing } from '@/data/types';
 import { useAppStore } from '@/store/AppStore';
 import { spacing } from '@/theme';
-import { ProductCard } from './ProductCard';
+import { ProductCardLink } from './FeedList';
 
 /** Two-column grid of product cards (fills right to left). */
 export function ProductGrid({ listings }: { listings: Listing[] }) {
@@ -18,12 +17,11 @@ export function ProductGrid({ listings }: { listings: Listing[] }) {
       {rows.map((row) => (
         <View key={row.map((l) => l.id).join('-')} style={styles.row}>
           {row.map((listing) => (
-            <ProductCard
+            <ProductCardLink
               key={listing.id}
               listing={listing}
               seller={getSeller(listing.sellerId)}
               isMine={listing.sellerId === user.id}
-              onPress={() => router.push(`/product/${listing.id}`)}
             />
           ))}
           {row.length === 1 ? <View style={styles.spacer} /> : null}

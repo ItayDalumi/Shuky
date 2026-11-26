@@ -159,6 +159,7 @@ export default function ProductScreen() {
           <CategoryArt
             category={listing.category}
             photoUri={listing.photoUri}
+            photoKey={listing.photoPath}
             artSize={210}
             style={styles.image}
           />

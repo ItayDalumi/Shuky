@@ -33,7 +33,13 @@ export function ProductCard({ listing, seller, isMine, onPress }: ProductCardPro
       style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}
     >
       <View>
-        <CategoryArt category={listing.category} photoUri={listing.photoUri} artSize={100} style={styles.image} />
+        <CategoryArt
+          category={listing.category}
+          photoUri={listing.photoUri}
+          photoKey={listing.photoPath}
+          artSize={100}
+          style={styles.image}
+        />
         <Pill
           size="sm"
           tone="solid"
