@@ -550,11 +550,11 @@ function friendlyMessage(error: unknown): string {
   }
   if (/location required/i.test(message)) return 'כדי לפרסם צריך קודם לשתף מיקום משוער בלהבים.';
   if (/outside community/i.test(message)) return 'נראה שהמיקום מחוץ ללהבים. כרגע שוקי פעיל רק בלהבים.';
-  if (/too many listings/i.test(message)) return 'אפשר לפרסם עד 10 מוצרים חדשים ביממה.';
+  if (/too many listings/i.test(message)) return 'אפשר לפרסם עד 10 מאפים חדשים ביממה.';
   if (/too many trades/i.test(message)) return 'הגעת למקסימום העסקאות החדשות להיום. נסו שוב מחר.';
   if (/too many contacts/i.test(message)) return 'פנית להרבה מוכרים היום. נסו שוב מחר.';
   if (/too many reports/i.test(message)) return 'שלחת הרבה דיווחים היום. נבדוק אותם בהקדם.';
-  if (/not available/i.test(message)) return 'המוצר או המשתמש כבר לא זמינים.';
+  if (/not available/i.test(message)) return 'המאפה או המשתמש כבר לא זמינים.';
   if (/rate limit|too many|security purposes/i.test(message)) return 'יותר מדי ניסיונות. חכו כמה דקות ונסו שוב.';
   if (/invalid.*email|email.*invalid|unable to validate email/i.test(message)) return 'כתובת המייל לא תקינה.';
   if (/captcha/i.test(message)) return 'בדיקת האבטחה נכשלה. נסו שוב.';

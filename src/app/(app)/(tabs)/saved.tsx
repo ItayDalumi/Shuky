@@ -22,8 +22,9 @@ export default function SavedScreen() {
         ) : (
           <EmptyState
             icon={Heart}
-            title="עוד לא שמרת מוצרים"
-            message="לחצו על הלב בעמוד מוצר כדי לשמור אותו כאן"
+            art="cookies"
+            title="עוד לא שמרת מאפים"
+            message="לחצו על הלב בעמוד של מאפה כדי לשמור אותו כאן"
             action={<Button label="לגלות מה יש בשכונה" onPress={() => router.navigate('/home')} />}
           />
         )}

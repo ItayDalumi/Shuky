@@ -34,7 +34,7 @@ import { useAppStore } from '@/store/AppStore';
 import { border, colors, radius, spacing } from '@/theme';
 
 const NOTIFICATION_ROWS: { key: keyof NotificationPrefs; icon: LucideIcon; label: string; hint: string }[] = [
-  { key: 'newListings', icon: CakeSlice, label: 'מאפים חדשים בשכונה', hint: 'כשאופה מהשכונה מעלה מוצר חדש' },
+  { key: 'newListings', icon: CakeSlice, label: 'מאפים חדשים בשכונה', hint: 'כשאופה מהשכונה מפרסם/ת מאפה חדש' },
   { key: 'orders', icon: Bell, label: 'הזמנות ועסקאות', hint: 'אישורי עסקה ותזכורות להזמנות מראש' },
   { key: 'ratings', icon: Star, label: 'דירוגים ורמות', hint: 'כשמדרגים אותך או כשעולים רמה' },
 ];
@@ -117,7 +117,7 @@ export default function SettingsScreen() {
   const onDeleteAccount = () =>
     confirmAction({
       title: 'למחוק את החשבון?',
-      message: 'כל המוצרים, הדירוגים והנקודות שלך יימחקו לצמיתות. אי אפשר לבטל את הפעולה.',
+      message: 'כל המאפים, הדירוגים והנקודות שלך יימחקו לצמיתות. אי אפשר לבטל את הפעולה.',
       confirmLabel: 'מחיקה',
       destructive: true,
       // Live: removes photos, then delete_my_account() deletes the user (data cascades).
@@ -132,7 +132,7 @@ export default function SettingsScreen() {
         <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
           <ScreenHeader title="הגדרות" fallback="/profile" />
           {error ? (
-            <AppText variant="small" color={colors.tomatoDark}>
+            <AppText variant="small" color={colors.cherryDark}>
               {error}
             </AppText>
           ) : null}
@@ -169,7 +169,7 @@ export default function SettingsScreen() {
             {permission === 'denied' || permission === 'undetermined' ? (
               <Row
                 icon={permission === 'denied' ? BellOff : BellRing}
-                iconColor={colors.tomato}
+                iconColor={colors.cherry}
                 label={permission === 'denied' ? 'ההתראות חסומות בטלפון' : 'הפעלת התראות בטלפון'}
                 hint={permission === 'denied' ? 'לחצו כדי לפתוח את הגדרות הטלפון' : 'כדי לדעת מיד על עסקאות ומאפים חדשים'}
                 onPress={enablePush}
@@ -187,7 +187,7 @@ export default function SettingsScreen() {
                     accessibilityLabel={row.label}
                     value={notificationPrefs[row.key]}
                     onValueChange={(v) => setNotificationPref(row.key, v)}
-                    trackColor={{ false: colors.line, true: colors.tomato }}
+                    trackColor={{ false: colors.line, true: colors.cherry }}
                     thumbColor={colors.white}
                     ios_backgroundColor={colors.line}
                     // react-native-web colors the "on" thumb separately (teal by default).
@@ -201,7 +201,7 @@ export default function SettingsScreen() {
           <Section title="פרטיות">
             <Row
               icon={Lock}
-              iconColor={colors.leaf}
+              iconColor={colors.sage}
               label="המיקום שלך מוגן"
               hint="השכנים רואים רק מרחק משוער, אף פעם לא את הכתובת שלך."
               last
@@ -259,10 +259,10 @@ type RowProps = {
 };
 
 function Row({ icon: Icon, label, value, hint, trailing, onPress, danger, iconColor, last }: RowProps) {
-  const labelColor = danger ? colors.tomatoDark : colors.ink;
+  const labelColor = danger ? colors.cherryDark : colors.ink;
   const content = (
     <>
-      <Icon size={20} color={danger ? colors.tomatoDark : (iconColor ?? colors.muted)} strokeWidth={2} />
+      <Icon size={20} color={danger ? colors.cherryDark : (iconColor ?? colors.muted)} strokeWidth={2} />
       <View style={styles.rowTexts}>
         <AppText variant="bodyMedium" color={labelColor}>
           {label}

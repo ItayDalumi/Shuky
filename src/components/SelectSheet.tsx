@@ -40,10 +40,10 @@ export function SelectSheet<T extends string>({ visible, title, options, value, 
                 }}
                 style={({ pressed }) => [styles.option, pressed ? { backgroundColor: colors.cream } : null]}
               >
-                <AppText variant="bodyMedium" color={selected ? colors.tomato : colors.ink}>
+                <AppText variant="bodyMedium" color={selected ? colors.cherry : colors.ink}>
                   {option.label}
                 </AppText>
-                {selected ? <Check size={20} color={colors.tomato} /> : null}
+                {selected ? <Check size={20} color={colors.cherry} /> : null}
               </Pressable>
             );
           })}

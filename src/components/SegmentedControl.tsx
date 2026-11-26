@@ -58,5 +58,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: radius.sm,
   },
-  optionSelected: { backgroundColor: colors.tomato },
+  optionSelected: { backgroundColor: colors.cherry },
 });

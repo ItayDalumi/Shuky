@@ -66,7 +66,7 @@ export default function NameScreen() {
             onSubmitEditing={submit}
           />
           {error ? (
-            <AppText variant="small" color={colors.tomatoDark}>
+            <AppText variant="small" color={colors.cherryDark}>
               {error}
             </AppText>
           ) : null}

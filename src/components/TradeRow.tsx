@@ -7,8 +7,8 @@ import { CategoryArt } from './CategoryArt';
 import { Pill, type PillTone } from './Pill';
 
 export function tradeStatus(trade: Trade): { label: string; tone: PillTone } {
-  if (trade.completedAt) return trade.iRated ? { label: 'הושלמה', tone: 'leaf' } : { label: 'דרגו', tone: 'honey' };
-  if (!trade.iConfirmed) return { label: 'מחכה לאישור שלך', tone: 'tomato' };
+  if (trade.completedAt) return trade.iRated ? { label: 'הושלמה', tone: 'sage' } : { label: 'דרגו', tone: 'honey' };
+  if (!trade.iConfirmed) return { label: 'מחכה לאישור שלך', tone: 'cherry' };
   return { label: `מחכה ל${trade.otherName.split(' ')[0]}`, tone: 'neutral' };
 }
 
@@ -24,7 +24,7 @@ export function TradeRow({ trade, onPress }: { trade: Trade; onPress: () => void
       style={({ pressed }) => [styles.row, pressed ? { opacity: 0.85 } : null]}
     >
       {trade.listingCategory ? (
-        <CategoryArt category={trade.listingCategory} iconSize={22} style={styles.art} />
+        <CategoryArt category={trade.listingCategory} artSize={44} style={styles.art} />
       ) : (
         <View style={[styles.art, { backgroundColor: colors.cream }]} />
       )}

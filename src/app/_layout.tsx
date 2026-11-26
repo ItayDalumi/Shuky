@@ -11,6 +11,7 @@ import {
   Rubik_700Bold,
   useFonts,
 } from '@expo-google-fonts/rubik';
+import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 
 import { AppText } from '@/components';
 import { setupRTL, webDir } from '@/lib/rtl';
@@ -27,6 +28,8 @@ export default function RootLayout() {
     Rubik_500Medium,
     Rubik_600SemiBold,
     Rubik_700Bold,
+    Fredoka_600SemiBold,
+    Fredoka_700Bold,
   });
 
   const ready = fontsLoaded || !!fontError;

@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type Vi
 import { border, colors, radius, spacing } from '@/theme';
 import { AppText } from './AppText';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'leaf';
+export type ButtonVariant = 'primary' | 'secondary' | 'sage';
 
 export type ButtonProps = {
   label: string;
@@ -20,12 +20,12 @@ export type ButtonProps = {
 };
 
 const VARIANTS: Record<ButtonVariant, { container: ViewStyle; text: string }> = {
-  primary: { container: { backgroundColor: colors.tomato }, text: colors.white },
+  primary: { container: { backgroundColor: colors.cherry }, text: colors.white },
   secondary: {
-    container: { backgroundColor: colors.white, borderWidth: border.input, borderColor: colors.tomato },
-    text: colors.tomato,
+    container: { backgroundColor: colors.white, borderWidth: border.input, borderColor: colors.cherry },
+    text: colors.cherry,
   },
-  leaf: { container: { backgroundColor: colors.leaf }, text: colors.white },
+  sage: { container: { backgroundColor: colors.sage }, text: colors.white },
 };
 
 export function Button({

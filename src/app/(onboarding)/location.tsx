@@ -26,7 +26,7 @@ export default function LocationScreen() {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setNote('בלי גישה למיקום נציג את המוצרים בלי מרחק. אפשר לשנות את זה בהגדרות הטלפון.');
+        setNote('בלי גישה למיקום נציג את המאפים בלי מרחק. אפשר לשנות את זה בהגדרות הטלפון.');
         return;
       }
       const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
@@ -37,7 +37,7 @@ export default function LocationScreen() {
       setNote(
         message.includes('מחוץ ללהבים')
           ? message
-          : 'לא הצלחנו לקבל את המיקום. אפשר להמשיך בלי (רק לא לפרסם מוצרים), ולנסות שוב אחר כך.',
+          : 'לא הצלחנו לקבל את המיקום. אפשר להמשיך בלי (רק לא לפרסם מאפים), ולנסות שוב אחר כך.',
       );
     } finally {
       setWorking(false);
@@ -62,9 +62,9 @@ export default function LocationScreen() {
           <AppText variant="body" color={colors.muted} center>
             כדי להראות לך מה יש בסביבה. השכנים יראו רק מרחק משוער – אף פעם לא את הכתובת שלך.
           </AppText>
-          <Pill label="המיקום שלך מוגן" icon={Lock} tone="leaf" style={styles.pill} />
+          <Pill label="המיקום שלך מוגן" icon={Lock} tone="sage" style={styles.pill} />
           {note ? (
-            <AppText variant="small" color={colors.tomatoDark} center>
+            <AppText variant="small" color={colors.cherryDark} center>
               {note}
             </AppText>
           ) : null}
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 105,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.leafLight,
+    backgroundColor: colors.cherryLight,
     marginBottom: spacing.sm,
   },
   innerCircle: {
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     borderRadius: 65,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.leaf,
+    backgroundColor: colors.cherry,
   },
   texts: { gap: spacing.md },
   pill: { alignSelf: 'center' },

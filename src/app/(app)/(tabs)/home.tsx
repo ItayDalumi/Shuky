@@ -5,6 +5,7 @@ import { Bell, CakeSlice, MapPin, Search } from 'lucide-react-native';
 
 import {
   AppText,
+  BakeryArt,
   Button,
   CategoryChips,
   EmptyState,
@@ -19,7 +20,7 @@ import type { CategoryFilter } from '@/data/categories';
 import { greeting } from '@/lib/format';
 import { filterListings } from '@/lib/search';
 import { useAppStore } from '@/store/AppStore';
-import { colors, spacing } from '@/theme';
+import { colors, radius, spacing } from '@/theme';
 
 /** 05 · בית (פיד) */
 export default function HomeScreen() {
@@ -28,13 +29,17 @@ export default function HomeScreen() {
   const [category, setCategory] = useState<CategoryFilter>('all');
 
   const listings = filterListings(feed, query, category);
+  const filtering = query.trim().length > 0 || category !== 'all';
+  const readyNow = listings.filter((l) => l.availability !== 'preorder');
+  const preorder = listings.filter((l) => l.availability === 'preorder');
+  const feedReady = feed.filter((l) => l.availability !== 'preorder').length;
 
   return (
     <Screen edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.body}
         keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={feedLoading && feed.length > 0} onRefresh={refreshAll} tintColor={colors.tomato} />}
+        refreshControl={<RefreshControl refreshing={feedLoading && feed.length > 0} onRefresh={refreshAll} tintColor={colors.cherry} />}
       >
         <View style={styles.header}>
           <View style={styles.greeting}>
@@ -42,7 +47,7 @@ export default function HomeScreen() {
               {`${greeting()}, ${user.name}`}
             </AppText>
             <View style={styles.location}>
-              <MapPin size={15} color={colors.leaf} strokeWidth={2} />
+              <MapPin size={15} color={colors.crust} strokeWidth={2} />
               <AppText variant="small" color={colors.muted}>
                 {user.community}
               </AppText>
@@ -59,31 +64,68 @@ export default function HomeScreen() {
         </View>
 
         {mode === 'demo' ? (
-          <Pill tone="honey" label="מצב הדגמה · המוכרים, המוצרים והדירוגים כאן לדוגמה בלבד" />
+          <Pill tone="honey" label="מצב הדגמה · האופים, המאפים והדירוגים כאן לדוגמה בלבד" />
+        ) : null}
+
+        {feed.length > 0 ? (
+          <View style={styles.banner}>
+            <View style={styles.bannerText}>
+              <AppText variant="heading" color={colors.crustDark}>
+                מה יוצא היום מהתנור?
+              </AppText>
+              <AppText variant="small" color={colors.crustDark}>
+                {bannerLine(feedReady, feed.length - feedReady)}
+              </AppText>
+            </View>
+            <View style={styles.bannerArt}>
+              <BakeryArt category="breads" size={92} background={colors.dough} />
+            </View>
+          </View>
         ) : null}
 
         <SearchField value={query} onChangeText={setQuery} />
 
         <CategoryChips value={category} onChange={setCategory} />
 
-        <SectionHeader title="טרי מהתנור" actionLabel="לכל המוצרים" onActionPress={() => router.navigate('/search')} />
-
         {feedError ? (
-          <AppText variant="small" color={colors.tomatoDark} center>
+          <AppText variant="small" color={colors.cherryDark} center>
             {feedError}
           </AppText>
         ) : null}
 
         {feedLoading && feed.length === 0 ? (
-          <ActivityIndicator color={colors.tomato} style={styles.loading} />
+          <ActivityIndicator color={colors.cherry} style={styles.loading} />
+        ) : listings.length > 0 && filtering ? (
+          <>
+            <SectionHeader title={listings.length === 1 ? 'מאפה אחד' : `${listings.length} מאפים`} />
+            <ProductGrid listings={listings} />
+          </>
         ) : listings.length > 0 ? (
-          <ProductGrid listings={listings} />
+          <>
+            {readyNow.length > 0 ? (
+              <>
+                <SectionHeader title="טרי מהתנור" actionLabel="לכל המאפים" onActionPress={() => router.navigate('/search')} />
+                <ProductGrid listings={readyNow} />
+              </>
+            ) : null}
+            {preorder.length > 0 ? (
+              <>
+                <View style={styles.sectionGap} />
+                <SectionHeader title="להזמנה מראש" />
+                <AppText variant="small" color={colors.muted} style={styles.sectionNote}>
+                  אופים במיוחד בשבילכם. מזמינים כמה ימים לפני.
+                </AppText>
+                <ProductGrid listings={preorder} />
+              </>
+            ) : null}
+          </>
         ) : feed.length === 0 ? (
           <EmptyState
             icon={CakeSlice}
+            art="cakes"
             title="עוד אין מאפים בשכונה"
             message="אופים משהו בבית? תהיו הראשונים לפרסם"
-            action={<Button label="הוספת מוצר" onPress={() => router.push('/listing/new')} />}
+            action={<Button label="פרסום מאפה" onPress={() => router.push('/listing/new')} />}
           />
         ) : (
           <EmptyState
@@ -95,6 +137,13 @@ export default function HomeScreen() {
       </ScrollView>
     </Screen>
   );
+}
+
+function bannerLine(ready: number, preorder: number): string {
+  const parts: string[] = [];
+  if (ready > 0) parts.push(ready === 1 ? 'מאפה אחד מוכן עכשיו' : `${ready} מאפים מוכנים עכשיו`);
+  if (preorder > 0) parts.push(preorder === 1 ? 'אחד להזמנה מראש' : `${preorder} להזמנה מראש`);
+  return `${parts.join(' ו-')} אצל השכנים.`;
 }
 
 const styles = StyleSheet.create({
@@ -112,4 +161,19 @@ const styles = StyleSheet.create({
   greeting: { alignItems: 'flex-start', gap: 2 },
   location: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   loading: { marginTop: spacing.xxl },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+    paddingStart: spacing.lg,
+    paddingEnd: spacing.xs,
+    backgroundColor: colors.dough,
+    borderRadius: radius.xl,
+    overflow: 'hidden',
+  },
+  bannerText: { flex: 1, gap: 2, alignItems: 'flex-start' },
+  bannerArt: { marginVertical: -spacing.xs },
+  sectionGap: { height: spacing.xs },
+  sectionNote: { marginTop: -spacing.sm },
 });

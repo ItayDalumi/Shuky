@@ -37,7 +37,7 @@ export default function TradeScreen() {
       <Screen>
         <View style={styles.center}>
           {loading ? (
-            <ActivityIndicator color={colors.tomato} />
+            <ActivityIndicator color={colors.cherry} />
           ) : (
             <EmptyState
               icon={PackageSearch}
@@ -114,7 +114,7 @@ function Pending({ trade }: { trade: Trade }) {
         </View>
 
         {error ? (
-          <AppText variant="small" color={colors.tomatoDark} center>
+          <AppText variant="small" color={colors.cherryDark} center>
             {error}
           </AppText>
         ) : null}
@@ -216,7 +216,7 @@ function Completed({ trade }: { trade: Trade }) {
           </View>
 
           {trade.iRated ? (
-            <AppText variant="small" color={colors.leafDark} center>
+            <AppText variant="small" color={colors.sageDark} center>
               {`תודה על הדירוג! הוא עוזר לשכנים לבחור.`}
             </AppText>
           ) : !trade.canRate ? (
@@ -240,11 +240,11 @@ function Completed({ trade }: { trade: Trade }) {
                     onSubmitEditing={sendRating}
                   />
                   {error ? (
-                    <AppText variant="small" color={colors.tomatoDark} center>
+                    <AppText variant="small" color={colors.cherryDark} center>
                       {error}
                     </AppText>
                   ) : null}
-                  <Button label="שליחת דירוג" variant="leaf" onPress={sendRating} loading={sending} />
+                  <Button label="שליחת דירוג" variant="sage" onPress={sendRating} loading={sending} />
                 </>
               ) : null}
             </View>
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
     borderRadius: 85,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.leafLight,
+    backgroundColor: colors.sageLight,
     marginBottom: spacing.xs,
   },
   innerCircle: {
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     borderRadius: 55,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.leaf,
+    backgroundColor: colors.sage,
   },
   texts: { gap: spacing.md },
   xpPill: {

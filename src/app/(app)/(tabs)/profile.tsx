@@ -25,7 +25,7 @@ export default function ProfileScreen() {
   const stats = [
     { label: 'עסקאות', value: String(user.trades) },
     { label: 'דירוג', value: user.rating === null ? '—' : user.rating.toFixed(1) },
-    { label: 'מוצרים פעילים', value: String(myListings.length) },
+    { label: 'מאפים פעילים', value: String(myListings.length) },
   ];
 
   return (
@@ -37,7 +37,7 @@ export default function ProfileScreen() {
 
         <View style={styles.profile}>
           <View style={styles.avatar}>
-            <AppText variant="logo" color={colors.tomato} style={styles.avatarLetter}>
+            <AppText variant="logo" color={colors.crustDark} style={styles.avatarLetter}>
               {user.name.charAt(0)}
             </AppText>
           </View>
@@ -45,7 +45,7 @@ export default function ProfileScreen() {
             {user.name}
           </AppText>
           <View style={styles.location}>
-            <MapPin size={15} color={colors.leaf} strokeWidth={2} />
+            <MapPin size={15} color={colors.crust} strokeWidth={2} />
             <AppText variant="small" color={colors.muted}>
               {user.community}
             </AppText>
@@ -105,7 +105,7 @@ export default function ProfileScreen() {
           style={({ pressed }) => [styles.tradesRow, pressed ? { opacity: 0.85 } : null]}
         >
           <View style={styles.tradesIcon}>
-            <Handshake size={20} color={colors.leafDark} strokeWidth={2} />
+            <Handshake size={20} color={colors.sageDark} strokeWidth={2} />
           </View>
           <View style={styles.tradesTexts}>
             <AppText variant="bodyMedium">העסקאות שלי</AppText>
@@ -123,16 +123,17 @@ export default function ProfileScreen() {
           <ChevronLeft size={20} color={colors.muted} />
         </Pressable>
 
-        <SectionHeader title="המוצרים שלי" />
+        <SectionHeader title="המאפים שלי" />
 
         {myListings.length > 0 ? (
           <ProductGrid listings={myListings} />
         ) : (
           <EmptyState
             icon={Plus}
-            title="עוד אין לך מוצרים"
-            message="יש לך עודף מהגינה או מהתנור? שתפו את השכנים"
-            action={<Button label="הוספת מוצר" onPress={() => router.push('/listing/new')} />}
+            art="breads"
+            title="עוד לא פרסמת מאפים"
+            message="אפית משהו טעים? שתפו את השכנים"
+            action={<Button label="פרסום מאפה" onPress={() => router.push('/listing/new')} />}
           />
         )}
       </ScrollView>
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.tomatoLight,
+    backgroundColor: colors.crustLight,
   },
   avatarLetter: { fontSize: 36, lineHeight: 44 },
   location: { flexDirection: 'row', alignItems: 'center', gap: 4 },
@@ -192,7 +193,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.leafLight,
+    backgroundColor: colors.sageLight,
   },
   tradesTexts: { flex: 1, alignItems: 'flex-start', gap: 2 },
   badge: {
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.tomato,
+    backgroundColor: colors.cherry,
   },
   stat: {
     flex: 1,

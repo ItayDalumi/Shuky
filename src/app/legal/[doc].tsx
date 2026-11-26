@@ -58,6 +58,6 @@ const styles = StyleSheet.create({
   section: { gap: spacing.xs },
   list: { gap: 6 },
   item: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.tomato, marginTop: 9 },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.cherry, marginTop: 9 },
   itemText: { flex: 1 },
 });

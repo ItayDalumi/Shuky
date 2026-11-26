@@ -34,12 +34,12 @@ export default function BlockedScreen() {
       <ScrollView contentContainerStyle={styles.body}>
         <ScreenHeader title="משתמשים חסומים" fallback="/settings" />
         {error ? (
-          <AppText variant="small" color={colors.tomatoDark}>
+          <AppText variant="small" color={colors.cherryDark}>
             {error}
           </AppText>
         ) : null}
         {blockedUsers.length === 0 ? (
-          <EmptyState icon={UserX} title="לא חסמת אף אחד" message="אפשר לחסום משתמש מעמוד של מוצר שלו" />
+          <EmptyState icon={UserX} title="לא חסמת אף אחד" message="אפשר לחסום משתמש מעמוד של מאפה שלו" />
         ) : (
           blockedUsers.map((b) => (
             <View key={b.id} style={styles.row}>

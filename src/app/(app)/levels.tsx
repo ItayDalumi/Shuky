@@ -102,7 +102,7 @@ export default function LevelsScreen() {
                       {`רמה ${level.level} · ${level.title}`}
                     </AppText>
                     {current ? (
-                      <Pill size="sm" tone="tomato" label="את/ה כאן" />
+                      <Pill size="sm" tone="cherry" label="את/ה כאן" />
                     ) : !reached ? (
                       <Lock size={16} color={colors.muted} />
                     ) : null}
@@ -110,7 +110,7 @@ export default function LevelsScreen() {
                   <AppText variant="caption" color={colors.muted}>
                     {level.description}
                   </AppText>
-                  <AppText variant="captionMedium" color={reached ? colors.leafDark : colors.honeyDark}>
+                  <AppText variant="captionMedium" color={reached ? colors.sageDark : colors.honeyDark}>
                     {level.minXp === 0
                       ? 'מההתחלה'
                       : reached
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   },
   nodeReached: { backgroundColor: colors.honeyLight, borderColor: colors.honey },
   nodeLocked: { backgroundColor: colors.white, borderColor: colors.line },
-  nodeCurrent: { borderColor: colors.tomato, borderWidth: 3 },
+  nodeCurrent: { borderColor: colors.cherry, borderWidth: 3 },
   check: {
     position: 'absolute',
     bottom: -2,
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.leaf,
+    backgroundColor: colors.sage,
     borderWidth: 2,
     borderColor: colors.cream,
   },
@@ -197,6 +197,6 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     borderRadius: radius.lg,
   },
-  stepCardCurrent: { borderColor: colors.tomato, borderWidth: 1.5 },
+  stepCardCurrent: { borderColor: colors.cherry, borderWidth: 1.5 },
   stepTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
 });

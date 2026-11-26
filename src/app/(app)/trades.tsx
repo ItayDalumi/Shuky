@@ -36,7 +36,7 @@ export default function TradesScreen() {
     <Screen>
       <ScrollView
         contentContainerStyle={styles.body}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={refreshTrades} tintColor={colors.tomato} />}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refreshTrades} tintColor={colors.cherry} />}
       >
         <ScreenHeader title="העסקאות שלי" fallback="/profile" />
         <AppText variant="small" color={colors.muted}>
@@ -45,8 +45,9 @@ export default function TradesScreen() {
         {trades.length === 0 ? (
           <EmptyState
             icon={Handshake}
+            art="pastries"
             title="עוד אין עסקאות"
-            message="קניתם משהו? בעמוד המוצר לחצו ״קניתי את זה״, והמוכר/ת יאשר/תאשר."
+            message="קניתם משהו? בעמוד המאפה לחצו ״קניתי את זה״, והמוכר/ת יאשר/תאשר."
           />
         ) : (
           <>

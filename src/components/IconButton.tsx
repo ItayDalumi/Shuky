@@ -12,7 +12,7 @@ export type IconButtonProps = {
   color?: string;
   /** Fill the icon (e.g. a saved heart) */
   filled?: boolean;
-  /** Small tomato notification dot */
+  /** Small cherry notification dot */
   badge?: boolean;
   style?: StyleProp<ViewStyle>;
 };
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     width: 9,
     height: 9,
     borderRadius: 5,
-    backgroundColor: colors.tomato,
+    backgroundColor: colors.cherry,
     borderWidth: 1.5,
     borderColor: colors.white,
   },

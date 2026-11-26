@@ -51,7 +51,7 @@ export function Captcha({ onToken }: CaptchaProps) {
         style={styles.web}
       />
       {failed ? (
-        <AppText variant="caption" color={colors.tomatoDark} center>
+        <AppText variant="caption" color={colors.cherryDark} center>
           לא הצלחנו לטעון את בדיקת האבטחה. בדקו את החיבור ונסו שוב.
         </AppText>
       ) : null}

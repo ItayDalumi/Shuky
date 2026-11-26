@@ -94,9 +94,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.lg,
   },
   boxFilled: { borderColor: colors.line },
-  boxActive: { borderColor: colors.tomato, borderWidth: 2 },
+  boxActive: { borderColor: colors.cherry, borderWidth: 2 },
   digit: { fontSize: 30, lineHeight: 36 },
-  cursor: { width: 2, height: 30, borderRadius: 1, backgroundColor: colors.tomato },
+  cursor: { width: 2, height: 30, borderRadius: 1, backgroundColor: colors.cherry },
   hiddenInput: {
     ...StyleSheet.absoluteFill,
     // Fully hidden on web (focus ring included); a hair visible on native so iOS keeps it focusable.

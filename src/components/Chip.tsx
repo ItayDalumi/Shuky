@@ -37,5 +37,5 @@ const styles = StyleSheet.create({
     borderWidth: border.hairline,
   },
   default: { backgroundColor: colors.white, borderColor: colors.line },
-  selected: { backgroundColor: colors.tomato, borderColor: colors.tomato },
+  selected: { backgroundColor: colors.cherry, borderColor: colors.cherry },
 });
