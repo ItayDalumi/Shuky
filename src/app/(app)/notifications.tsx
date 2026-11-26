@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
-import { Bell, CakeSlice, CalendarClock, CircleCheck, Handshake, Star, Trophy, type LucideIcon } from 'lucide-react-native';
+import { Bell, CakeSlice, CalendarClock, CircleCheck, Flag, Handshake, Star, Trophy, type LucideIcon } from 'lucide-react-native';
 
 import { AppText, EmptyState, Screen, ScreenHeader } from '@/components';
 import type { AppNotification, NotificationKind } from '@/data/types';
@@ -16,6 +16,7 @@ const KIND_STYLE: Record<NotificationKind, { Icon: LucideIcon; color: string; ba
   rating: { Icon: Star, color: colors.honeyDark, background: colors.honeyLight },
   preorder: { Icon: CalendarClock, color: colors.honeyDark, background: colors.honeyLight },
   level: { Icon: Trophy, color: colors.honeyDark, background: colors.honeyLight },
+  report: { Icon: Flag, color: colors.cherryDark, background: colors.cherryLight },
 };
 
 /** התראות. Live: created by the server (trades, ratings, new bakes nearby, level-ups). */

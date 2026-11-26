@@ -57,7 +57,15 @@ export type CurrentUser = {
   rating: number | null;
 };
 
-export type NotificationKind = 'tradeConfirm' | 'tradeCompleted' | 'newListing' | 'rating' | 'preorder' | 'level';
+export type NotificationKind =
+  | 'tradeConfirm'
+  | 'tradeCompleted'
+  | 'newListing'
+  | 'rating'
+  | 'preorder'
+  | 'level'
+  /** Admins only: a new report to review */
+  | 'report';
 
 export type AppNotification = {
   id: string;
@@ -101,5 +109,27 @@ export type Trade = {
 };
 
 export type ReportReason = 'spam' | 'inappropriate' | 'unsafe_food' | 'fake' | 'harassment' | 'dangerous' | 'other';
+
+/** A report as the operator sees it on the moderation screen. */
+export type AdminReport = {
+  id: string;
+  createdAt: string;
+  reason: ReportReason;
+  details: string | null;
+  status: 'open' | 'reviewed' | 'dismissed';
+  listingId: string | null;
+  listingTitle: string | null;
+  listingActive: boolean | null;
+  listingCategory: Category | null;
+  listingPhotoUri?: string;
+  reportedUserId: string;
+  reportedName: string;
+  reportedSuspended: boolean;
+  reporterName: string;
+  /** Open reports on the same listing (or user) */
+  openOnTarget: number;
+};
+
+export type ModerationAction = 'hide' | 'restore' | 'dismiss' | 'suspend';
 
 export type BlockedUser = { id: string; name: string };

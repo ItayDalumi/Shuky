@@ -108,4 +108,18 @@ describe('AppStore (demo mode)', () => {
     expect(store().unreadCount).toBe(0);
   });
 
+
+  it('moderation: hide, restore, suspend and unsuspend (demo)', async () => {
+    const { store } = await setup();
+    expect(store().isAdmin).toBe(true);
+    const report = store().adminReports.find((r) => r.status === 'open')!;
+    await act(async () => store().resolveReport(report.id, 'hide'));
+    expect(store().adminReports.find((r) => r.id === report.id)).toMatchObject({ status: 'reviewed', listingActive: false });
+    await act(async () => store().resolveReport(report.id, 'restore'));
+    expect(store().adminReports.find((r) => r.id === report.id)?.listingActive).toBe(true);
+    await act(async () => store().resolveReport(report.id, 'suspend'));
+    expect(store().adminReports.find((r) => r.id === report.id)?.reportedSuspended).toBe(true);
+    await act(async () => store().unsuspendUser(report.reportedUserId));
+    expect(store().adminReports.find((r) => r.id === report.id)?.reportedSuspended).toBe(false);
+  });
 });

@@ -60,7 +60,8 @@ so new users enter one on the name screen (it isn't verified).
 1. Create a project at [supabase.com](https://supabase.com) (region: Frankfurt is closest to Israel).
 2. **SQL Editor** → run each file in `supabase/migrations/` **in order** (paste → **Run**):
    `20261121120000_init.sql`, `20261122090000_email_auth.sql`, `20261122140000_phase3.sql`,
-   `20261123090000_push.sql`, `20261124090000_security.sql`, `20261125090000_compliance.sql`, then `20261126090000_profile_rpc.sql`.
+   `20261123090000_push.sql`, `20261124090000_security.sql`, `20261125090000_compliance.sql`, `20261126090000_profile_rpc.sql`, `20261127090000_moderation.sql`, then
+   `20261127100000_keepalive.sql`.
    This creates the tables, the security rules (RLS), the feed / trade / rating / notification
    functions and the `listing-photos` bucket.
 3. **Email code** (free; the Email provider is on by default):
@@ -92,7 +93,7 @@ In demo mode the phone shows a local notification when a demo trade completes.
 ## Security
 
 Enforced in the database (RLS, column grants, `SECURITY DEFINER` functions), not just in the app.
-`supabase/tests` holds 92 checks; run them with `npm run test:db` (CI runs them on every push).
+`supabase/tests` holds 108 checks; run them with `npm run test:db` (CI runs them on every push).
 
 - **Privacy:** locations are rounded on the phone, snapped to ~100 m and never readable by others;
   the feed shows a rounded distance only. Phone numbers can't be read in bulk: the WhatsApp number
@@ -102,12 +103,20 @@ Enforced in the database (RLS, column grants, `SECURITY DEFINER` functions), not
   pair of neighbors per 7 days, max 3 XP trades a day. One rating per neighbor per 30 days.
 - **Abuse:** rate limits on listings (10/day), trades (15/day), reports (20/day). Location must be
   inside the community area to post. Report & block (blocks hide listings, notifications, contact
-  and trades both ways). A listing reported by 3 established neighbors is hidden until reviewed:
-  check **Table Editor → reports** in Supabase regularly (Apple expects reports to be handled).
+  and trades both ways). A listing reported by 3 established neighbors is hidden until reviewed.
+- **Moderation:** make yourself an admin once (SQL Editor:
+  `insert into public.admins (user_id) select id from auth.users where email = 'YOUR-EMAIL';`).
+  Every new report then reaches you as a push notification, and **Settings → ניהול דיווחים** lists
+  reports with actions: hide / restore the listing, dismiss the report, suspend / unsuspend the
+  user. Hidden listings stay hidden until an admin restores them; suspended users can't post.
+  Handle reports within a day (Apple and Google expect timely moderation).
 - **Optional CAPTCHA (free):** create a Cloudflare Turnstile widget (add the hostname from
   `EXPO_PUBLIC_TURNSTILE_BASE_URL`), put its secret in Supabase → Authentication → Attack
   Protection, and its site key in `.env` as `EXPO_PUBLIC_TURNSTILE_SITE_KEY`.
 - After running the migrations, open Supabase → **Advisors → Security** and fix anything it flags.
+- **Keep the free project awake:** free Supabase projects pause after about a week without
+  activity. `.github/workflows/keepalive.yml` pings the database daily once you add the repository
+  secrets `SUPABASE_URL` and `SUPABASE_ANON_KEY` (GitHub → Settings → Secrets and variables → Actions).
 
 ## Privacy & compliance checklist
 
@@ -197,6 +206,7 @@ docs/                       Screenshots
 | `/trades` | העסקאות שלי: waiting for me, waiting for the other side, completed |
 | `/notifications` | Notifications (bell on the home screen) |
 | `/settings` | Settings: profile, notification toggles, privacy, sign out, delete account |
+| `/admin` | Moderation (admins only): reports with hide / restore / dismiss / suspend |
 
 ### Design system
 
@@ -242,6 +252,35 @@ Icons are [Lucide](https://lucide.dev) (`lucide-react-native`), the same line st
   product page, the seller confirms (from the notification or "העסקאות שלי"), and only then does
   `confirm_trade()` give each side +20 XP, once. Either side can cancel a pending trade. After a
   completed trade each side can rate the other once (1–5 stars); the seller's average updates.
+
+## Releasing (EAS)
+
+Builds run in Expo's cloud (EAS); the free plan includes a limited number of builds a month.
+`eas.json` has two profiles: **preview** (an installable Android APK for testers) and
+**production** (store builds). Fixes that don't touch native code ship as over-the-air updates.
+
+One-time setup:
+
+```bash
+npx eas-cli@latest login        # your Expo account
+npx eas-cli@latest init         # links the project; adds extra.eas.projectId to app.json
+npx eas-cli@latest update:configure   # adds updates.url to app.json
+```
+
+Builds don't see `.env` (it isn't uploaded). Add the two public values as EAS environment
+variables for the `preview` and `production` environments (expo.dev → the project →
+Environment variables, visibility "Plain text"): `EXPO_PUBLIC_SUPABASE_URL` and
+`EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+
+```bash
+npx eas-cli@latest build --profile preview --platform android    # APK to share with testers
+npx eas-cli@latest build --profile production --platform android # AAB for Google Play
+npx eas-cli@latest update --channel production --message "fix: ..."  # OTA update
+```
+
+`runtimeVersion` follows the app version: bump `version` in `app.json` whenever native code or
+config changes (new native package, permissions, icons); otherwise publish an update.
+App identifiers: `com.itaydalumi.shuky` (iOS and Android).
 
 ## Roadmap
 

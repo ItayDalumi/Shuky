@@ -3,6 +3,7 @@
  * Every function here assumes isSupabaseConfigured === true.
  */
 import type {
+  AdminReport,
   AppNotification,
   BlockedUser,
   Availability,
@@ -12,6 +13,7 @@ import type {
   Listing,
   NotificationKind,
   NotificationPrefs,
+  ModerationAction,
   ReportReason,
   Seller,
   Trade,
@@ -460,6 +462,69 @@ export async function reportListing(listingId: string, sellerId: string, reason:
   if (error) throw error;
 }
 
+// ---------------------------------------------------------------------------
+// Moderation (operator only; the server checks public.admins)
+// ---------------------------------------------------------------------------
+export async function amIAdmin(): Promise<boolean> {
+  const { data, error } = await requireSupabase().rpc('is_admin');
+  if (error) return false;
+  return data === true;
+}
+
+type AdminReportRow = {
+  id: string;
+  created_at: string;
+  reason: ReportReason;
+  details: string | null;
+  status: AdminReport['status'];
+  listing_id: string | null;
+  listing_title: string | null;
+  listing_active: boolean | null;
+  listing_photo_path: string | null;
+  listing_category: Category | null;
+  reported_user_id: string;
+  reported_name: string;
+  reported_suspended: boolean;
+  reporter_name: string;
+  open_reports_on_target: number;
+};
+
+export async function fetchAdminReports(): Promise<AdminReport[]> {
+  const { data, error } = await requireSupabase().rpc('admin_reports');
+  if (error) throw error;
+  const rows = (data ?? []) as AdminReportRow[];
+  const photos = await signPhotoUrls([
+    ...new Set(rows.map((r) => r.listing_photo_path).filter((p): p is string => !!p)),
+  ]);
+  return rows.map((r) => ({
+    id: r.id,
+    createdAt: r.created_at,
+    reason: r.reason,
+    details: r.details,
+    status: r.status,
+    listingId: r.listing_id,
+    listingTitle: r.listing_title,
+    listingActive: r.listing_active,
+    listingCategory: r.listing_category,
+    listingPhotoUri: r.listing_photo_path ? photos.get(r.listing_photo_path) : undefined,
+    reportedUserId: r.reported_user_id,
+    reportedName: r.reported_name,
+    reportedSuspended: r.reported_suspended,
+    reporterName: r.reporter_name,
+    openOnTarget: Number(r.open_reports_on_target),
+  }));
+}
+
+export async function resolveReport(reportId: string, action: ModerationAction) {
+  const { error } = await requireSupabase().rpc('admin_resolve_report', { p_report: reportId, p_action: action });
+  if (error) throw error;
+}
+
+export async function unsuspendUser(userId: string) {
+  const { error } = await requireSupabase().rpc('admin_unsuspend', { p_user: userId });
+  if (error) throw error;
+}
+
 export async function blockUser(userId: string) {
   const { error } = await requireSupabase().from('blocks').insert({ blocked_id: userId });
   if (error && error.code !== '23505') throw error; // already blocked is fine
@@ -555,6 +620,9 @@ function friendlyMessage(error: unknown): string {
   if (/too many contacts/i.test(message)) return 'פנית להרבה מוכרים היום. נסו שוב מחר.';
   if (/too many reports/i.test(message)) return 'שלחת הרבה דיווחים היום. נבדוק אותם בהקדם.';
   if (/not available/i.test(message)) return 'המאפה או המשתמש כבר לא זמינים.';
+  if (/account suspended/i.test(message)) return 'החשבון הושעה בעקבות דיווחים. לבירור כתבו לנו מעמוד בטיחות ועזרה.';
+  if (/hidden by moderation/i.test(message)) return 'המאפה הוסתר בעקבות דיווחים ולא ניתן להציג אותו שוב.';
+  if (/not allowed/i.test(message)) return 'אין לך הרשאה לפעולה הזו.';
   if (/rate limit|too many|security purposes/i.test(message)) return 'יותר מדי ניסיונות. חכו כמה דקות ונסו שוב.';
   if (/invalid.*email|email.*invalid|unable to validate email/i.test(message)) return 'כתובת המייל לא תקינה.';
   if (/captcha/i.test(message)) return 'בדיקת האבטחה נכשלה. נסו שוב.';
