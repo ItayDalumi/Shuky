@@ -60,7 +60,8 @@ so new users enter one on the name screen (it isn't verified).
 1. Create a project at [supabase.com](https://supabase.com) (region: Frankfurt is closest to Israel).
 2. **SQL Editor** → run each file in `supabase/migrations/` **in order** (paste → **Run**):
    `20261121120000_init.sql`, `20261122090000_email_auth.sql`, `20261122140000_phase3.sql`,
-   `20261123090000_push.sql`, `20261124090000_security.sql`, `20261125090000_compliance.sql`, `20261126090000_profile_rpc.sql`, then `20261127090000_moderation.sql`.
+   `20261123090000_push.sql`, `20261124090000_security.sql`, `20261125090000_compliance.sql`, `20261126090000_profile_rpc.sql`, `20261127090000_moderation.sql`, then
+   `20261127100000_keepalive.sql`.
    This creates the tables, the security rules (RLS), the feed / trade / rating / notification
    functions and the `listing-photos` bucket.
 3. **Email code** (free; the Email provider is on by default):
@@ -113,6 +114,9 @@ Enforced in the database (RLS, column grants, `SECURITY DEFINER` functions), not
   `EXPO_PUBLIC_TURNSTILE_BASE_URL`), put its secret in Supabase → Authentication → Attack
   Protection, and its site key in `.env` as `EXPO_PUBLIC_TURNSTILE_SITE_KEY`.
 - After running the migrations, open Supabase → **Advisors → Security** and fix anything it flags.
+- **Keep the free project awake:** free Supabase projects pause after about a week without
+  activity. `.github/workflows/keepalive.yml` pings the database daily once you add the repository
+  secrets `SUPABASE_URL` and `SUPABASE_ANON_KEY` (GitHub → Settings → Secrets and variables → Actions).
 
 ## Privacy & compliance checklist
 

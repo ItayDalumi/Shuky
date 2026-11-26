@@ -161,3 +161,11 @@ do $$ begin
   raise notice 'PASS admins can see the photo of a hidden listing, neighbors cannot';
 end $$;
 reset role;
+
+-- keepalive() is callable without signing in, and reveals nothing but the time
+set role anon;
+do $$ begin
+  assert public.keepalive() is not null, 'keepalive';
+  raise notice 'PASS keepalive() works for the scheduled ping (anon)';
+end $$;
+reset role;
