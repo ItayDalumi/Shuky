@@ -1,7 +1,7 @@
 import { CakeSlice, Cookie, Croissant, Dessert, Wheat, type LucideIcon } from 'lucide-react-native';
 
 import { colors } from '@/theme';
-import type { Category, DietaryTag } from './types';
+import type { Category, DietaryTag, ReportReason } from './types';
 
 export type CategoryConfig = {
   label: string;
@@ -42,6 +42,17 @@ export const DIETARY_LABELS: Record<DietaryTag, string> = {
 };
 
 export const DIETARY_ORDER: DietaryTag[] = ['kosher', 'parve', 'glutenFree', 'vegan', 'nutFree'];
+
+/** Report reasons as shown to the operator */
+export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
+  unsafe_food: 'מזון לא בטוח או מקולקל',
+  fake: 'תיאור מזויף או מטעה',
+  inappropriate: 'תוכן לא הולם',
+  spam: 'ספאם או פרסומת',
+  harassment: 'הטרדה',
+  dangerous: 'פגיעה עצמית או סכנה לאדם',
+  other: 'אחר',
+};
 
 /** Pre-order notice options, in days */
 export const NOTICE_OPTIONS = [1, 2, 3, 7] as const;

@@ -2,7 +2,7 @@
  * Static mock data for Phase 1 (no backend yet).
  * Phase 2 replaces this with Supabase tables: profiles, listings, trades, ratings.
  */
-import type { AppNotification, CurrentUser, Listing, Seller, Trade } from './types';
+import type { AdminReport, AppNotification, CurrentUser, Listing, Seller, Trade } from './types';
 
 /** ISO date `days` days before now, so "נאפה היום" stays true whenever the app runs. */
 function daysBefore(days: number): string {
@@ -285,5 +285,41 @@ export const initialTrades: Trade[] = [
     iRated: false,
     xpAwarded: true,
     canRate: true,
+  },
+];
+
+/** Demo only: what the operator's moderation screen looks like with a couple of reports. */
+export const initialAdminReports: AdminReport[] = [
+  {
+    id: 'r1',
+    createdAt: new Date(Date.now() - 40 * 60_000).toISOString(),
+    reason: 'unsafe_food',
+    details: 'הקרם היה חמוץ, נראה שהעוגה לא נשמרה במקרר',
+    status: 'open',
+    listingId: 'l2',
+    listingTitle: 'עוגת גבינה פירורים',
+    listingActive: true,
+    listingCategory: 'cakes',
+    reportedUserId: 's3',
+    reportedName: 'מיכל אברהם',
+    reportedSuspended: false,
+    reporterName: 'יוסי לוי',
+    openOnTarget: 1,
+  },
+  {
+    id: 'r2',
+    createdAt: new Date(Date.now() - 26 * 3600_000).toISOString(),
+    reason: 'spam',
+    details: null,
+    status: 'dismissed',
+    listingId: 'l4',
+    listingTitle: 'רוגלך שוקולד',
+    listingActive: true,
+    listingCategory: 'pastries',
+    reportedUserId: 's2',
+    reportedName: 'יוסי לוי',
+    reportedSuspended: false,
+    reporterName: 'עמית ברק',
+    openOnTarget: 0,
   },
 ];

@@ -19,6 +19,7 @@ import {
   Trash2,
   UserX,
   type LucideIcon,
+  ShieldAlert,
 } from 'lucide-react-native';
 
 import { AppText, Input, Screen, ScreenHeader } from '@/components';
@@ -41,7 +42,18 @@ const NOTIFICATION_ROWS: { key: keyof NotificationPrefs; icon: LucideIcon; label
 
 /** הגדרות. In live mode the name, sign out and delete account go to Supabase; toggles are still local (Phase 3). */
 export default function SettingsScreen() {
-  const { user, updateUser, signOut, deleteAccount, exportMyData, notificationPrefs, setNotificationPref } = useAppStore();
+  const {
+    user,
+    updateUser,
+    signOut,
+    deleteAccount,
+    exportMyData,
+    notificationPrefs,
+    setNotificationPref,
+    isAdmin,
+    adminReports,
+  } = useAppStore();
+  const openReports = adminReports.filter((r) => r.status === 'open').length;
   const [exporting, setExporting] = useState(false);
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone);
@@ -213,6 +225,19 @@ export default function SettingsScreen() {
             <Row icon={ShieldCheck} label="מדיניות פרטיות" onPress={() => router.push('/legal/privacy')} />
             <Row icon={FileText} label="תנאי שימוש" onPress={() => router.push('/legal/terms')} last />
           </Section>
+
+          {isAdmin ? (
+            <Section title="ניהול">
+              <Row
+                icon={ShieldAlert}
+                iconColor={colors.cherry}
+                label="ניהול דיווחים"
+                hint={openReports > 0 ? `${openReports} ממתינים לטיפול` : 'אין דיווחים פתוחים'}
+                onPress={() => router.push('/admin')}
+                last
+              />
+            </Section>
+          ) : null}
 
           <Section title="חשבון">
             <Row icon={UserX} label="משתמשים חסומים" onPress={() => router.push('/blocked')} />

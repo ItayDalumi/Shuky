@@ -19,14 +19,17 @@ import {
   currentUser as demoUser,
   initialListings,
   initialNotifications,
+  initialAdminReports,
   initialTrades,
   sellers as demoSellers,
 } from '@/data/mock';
 import type {
+  AdminReport,
   AppNotification,
   BlockedUser,
   CurrentUser,
   Listing,
+  ModerationAction,
   NotificationPrefs,
   ReportReason,
   Seller,
@@ -106,6 +109,13 @@ type AppStore = {
   blockUser: (userId: string) => Promise<void>;
   unblockUser: (userId: string) => Promise<void>;
 
+  // Moderation (the operator only; demo mode shows sample reports)
+  isAdmin: boolean;
+  adminReports: AdminReport[];
+  refreshAdminReports: () => Promise<void>;
+  resolveReport: (reportId: string, action: ModerationAction) => Promise<void>;
+  unsuspendUser: (userId: string) => Promise<void>;
+
   // Saved
   savedListings: Listing[];
   isSaved: (id: string) => boolean;
@@ -156,6 +166,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   const [notifications, setNotifications] = useState<AppNotification[]>(live ? [] : initialNotifications);
   const [notificationPrefs, setNotificationPrefs] = useState<NotificationPrefs>(DEFAULT_PREFS);
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  const [isAdmin, setIsAdmin] = useState(!live);
+  const [adminReports, setAdminReports] = useState<AdminReport[]>(live ? [] : initialAdminReports);
 
   // Latest user / trades, for async callbacks (demo timers, reloads).
   const userRef = useRef(user);
@@ -210,6 +222,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       api.fetchSavedIds().then(setSavedIds).catch(() => {});
       api.fetchNotifications().then(setNotifications).catch(() => {});
       api.fetchBlocks().then(setBlockedUsers).catch(() => {});
+      api.amIAdmin().then(setIsAdmin).catch(() => {});
       return 'ready';
     },
     [refreshFeed],
@@ -238,6 +251,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         setNotifications([]);
         setNotificationPrefs(DEFAULT_PREFS);
         setBlockedUsers([]);
+        setIsAdmin(false);
+        setAdminReports([]);
         setAuthStatus('signedOut');
         return;
       }
@@ -594,6 +609,56 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   );
 
   // ---------------------------------------------------------------------------
+  // Moderation
+  // ---------------------------------------------------------------------------
+  const refreshAdminReports = useCallback(async () => {
+    if (live) setAdminReports(await api.fetchAdminReports());
+  }, [live]);
+
+  const resolveReport = useCallback(
+    async (reportId: string, action: ModerationAction) => {
+      if (live) {
+        await api.resolveReport(reportId, action);
+        await Promise.all([refreshAdminReports(), refreshFeed()]);
+        return;
+      }
+      setAdminReports((prev) => {
+        const target = prev.find((r) => r.id === reportId);
+        if (!target) return prev;
+        const sameListing = (r: AdminReport) => !!target.listingId && r.listingId === target.listingId;
+        return prev.map((r) => {
+          if (action === 'dismiss') return r.id === reportId ? { ...r, status: 'dismissed' as const } : r;
+          if (action === 'hide' && (r.id === reportId || sameListing(r)))
+            return { ...r, status: r.status === 'open' ? ('reviewed' as const) : r.status, listingActive: false };
+          if (action === 'restore' && (r.id === reportId || sameListing(r)))
+            return { ...r, status: r.status === 'open' ? ('dismissed' as const) : r.status, listingActive: true };
+          if (action === 'suspend' && r.reportedUserId === target.reportedUserId)
+            return {
+              ...r,
+              status: r.status === 'open' ? ('reviewed' as const) : r.status,
+              reportedSuspended: true,
+              listingActive: r.listingId ? false : r.listingActive,
+            };
+          return r;
+        });
+      });
+    },
+    [live, refreshAdminReports, refreshFeed],
+  );
+
+  const unsuspendUser = useCallback(
+    async (userId: string) => {
+      if (live) {
+        await api.unsuspendUser(userId);
+        await refreshAdminReports();
+        return;
+      }
+      setAdminReports((prev) => prev.map((r) => (r.reportedUserId === userId ? { ...r, reportedSuspended: false } : r)));
+    },
+    [live, refreshAdminReports],
+  );
+
+  // ---------------------------------------------------------------------------
   // Saved
   // ---------------------------------------------------------------------------
   const isSaved = useCallback((id: string) => savedIds.includes(id), [savedIds]);
@@ -676,6 +741,11 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       reportListing,
       blockedUsers,
       refreshBlocks,
+      isAdmin,
+      adminReports,
+      refreshAdminReports,
+      resolveReport,
+      unsuspendUser,
       blockUser,
       unblockUser,
       savedListings: savedIds
@@ -728,6 +798,11 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     refreshBlocks,
     blockUser,
     unblockUser,
+    isAdmin,
+    adminReports,
+    refreshAdminReports,
+    resolveReport,
+    unsuspendUser,
     isSaved,
     toggleSaved,
     notifications,
