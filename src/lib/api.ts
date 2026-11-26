@@ -521,7 +521,26 @@ export async function exportMyData(): Promise<unknown> {
 
 /** Friendly Hebrew message for errors shown to the user. */
 export function errorMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error ?? '');
+  const friendly = friendlyMessage(error);
+  // Development builds also show the server's reason, so setup problems are easy to spot.
+  if (__DEV__) {
+    const raw = rawMessage(error);
+    if (raw) return `${friendly}\n(${raw})`;
+  }
+  return friendly;
+}
+
+/** Supabase auth errors are Error instances; PostgREST / storage errors are plain objects. */
+function rawMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) return String((error as { message: unknown }).message);
+  return error ? String(error) : '';
+}
+
+function friendlyMessage(error: unknown): string {
+  const message = rawMessage(error);
+  if (/error sending .*email|smtp/i.test(message)) return 'לא הצלחנו לשלוח את המייל. נסו שוב בעוד כמה דקות.';
+  if (/invalid api key|no api key|apikey/i.test(message)) return 'האפליקציה לא מחוברת נכון לשרת (מפתח שגוי).';
   if (/token has expired|invalid.*otp|otp.*invalid|Token has expired or is invalid/i.test(message)) {
     return 'הקוד לא נכון או שפג תוקפו. נסו שוב.';
   }
