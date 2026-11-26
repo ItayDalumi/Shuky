@@ -253,6 +253,35 @@ Icons are [Lucide](https://lucide.dev) (`lucide-react-native`), the same line st
   `confirm_trade()` give each side +20 XP, once. Either side can cancel a pending trade. After a
   completed trade each side can rate the other once (1–5 stars); the seller's average updates.
 
+## Releasing (EAS)
+
+Builds run in Expo's cloud (EAS); the free plan includes a limited number of builds a month.
+`eas.json` has two profiles: **preview** (an installable Android APK for testers) and
+**production** (store builds). Fixes that don't touch native code ship as over-the-air updates.
+
+One-time setup:
+
+```bash
+npx eas-cli@latest login        # your Expo account
+npx eas-cli@latest init         # links the project; adds extra.eas.projectId to app.json
+npx eas-cli@latest update:configure   # adds updates.url to app.json
+```
+
+Builds don't see `.env` (it isn't uploaded). Add the two public values as EAS environment
+variables for the `preview` and `production` environments (expo.dev → the project →
+Environment variables, visibility "Plain text"): `EXPO_PUBLIC_SUPABASE_URL` and
+`EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+
+```bash
+npx eas-cli@latest build --profile preview --platform android    # APK to share with testers
+npx eas-cli@latest build --profile production --platform android # AAB for Google Play
+npx eas-cli@latest update --channel production --message "fix: ..."  # OTA update
+```
+
+`runtimeVersion` follows the app version: bump `version` in `app.json` whenever native code or
+config changes (new native package, permissions, icons); otherwise publish an update.
+App identifiers: `com.itaydalumi.shuky` (iOS and Android).
+
 ## Roadmap
 
 - **Phase 2 (done):** Supabase schema with RLS, email-code sign-in, name + WhatsApp step, location

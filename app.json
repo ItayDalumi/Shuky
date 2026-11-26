@@ -10,10 +10,10 @@
     "backgroundColor": "#FFF8EE",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.shuky.app"
+      "bundleIdentifier": "com.itaydalumi.shuky"
     },
     "android": {
-      "package": "com.shuky.app",
+      "package": "com.itaydalumi.shuky",
       "adaptiveIcon": {
         "backgroundColor": "#E85D3F",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -57,8 +57,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "כדי להעלות תמונה של המוצר שלך",
-          "cameraPermission": "כדי לצלם את המוצר שלך"
+          "photosPermission": "כדי להעלות תמונה של המאפה שלך",
+          "cameraPermission": "כדי לצלם את המאפה שלך"
         }
       ],
       [
@@ -75,6 +75,9 @@
           "defaultChannel": "default"
         }
       ]
-    ]
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
   }
 }
