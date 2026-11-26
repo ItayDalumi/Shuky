@@ -5,7 +5,7 @@ insert into auth.users values ('00000000-0000-0000-0000-00000000000a',''), ('000
 create or replace function pg_temp.as_user(u text) returns void language sql as $$ select set_config('request.jwt.claim.sub', u, false) $$;
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'איתי', '972501111111');
+select public.create_my_profile('איתי', '972501111111');
 select public.register_push_token('ExponentPushToken[aaaa1111]', 'ios');
 do $$ begin
   begin
@@ -21,14 +21,14 @@ do $$ begin
   exception when insufficient_privilege then raise notice 'PASS tokens only through register_push_token()'; end;
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'מיכל', '972503333333');
+select public.create_my_profile('מיכל', '972503333333');
 select public.set_my_location(31.373, 34.815);
 do $$ begin
   assert (select count(*) from public.push_tokens) = 0, 'cannot see others tokens';
   raise notice 'PASS users cannot see other users'' devices';
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'דנה', '972502222222');
+select public.create_my_profile('דנה', '972502222222');
 select public.set_my_location(31.375, 34.817);
 insert into public.listings (title, category, price, availability, baked_at) values ('עוגיות', 'cookies', 25, 'ready', current_date);
 reset role;
@@ -43,7 +43,7 @@ end $$;
 -- preference off -> no notification -> no push
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
-update public.profiles set notification_prefs = '{"newListings": false, "orders": true, "ratings": true}' where id = auth.uid();
+select public.set_my_notification_prefs('{"newListings": false, "orders": true, "ratings": true}');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 insert into public.listings (title, category, price, availability, baked_at) values ('חלה', 'breads', 20, 'ready', current_date);
 reset role;

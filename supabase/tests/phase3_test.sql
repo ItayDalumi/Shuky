@@ -8,13 +8,13 @@ $$ select set_config('request.jwt.claim.sub', u, false) $$;
 
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'איתי', '972501111111');
+select public.create_my_profile('איתי', '972501111111');
 select public.set_my_location(31.372, 34.816);
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'מיכל', '972503333333');
+select public.create_my_profile('מיכל', '972503333333');
 select public.set_my_location(31.373, 34.815);
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'דנה', '972502222222');
+select public.create_my_profile('דנה', '972502222222');
 select public.set_my_location(31.375, 34.817);
 
 -- ---------- new listing notifies neighbors (respecting prefs) ----------
@@ -28,7 +28,7 @@ do $$ begin
 end $$;
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
-update public.profiles set notification_prefs = '{"newListings": false, "orders": true, "ratings": true}' where id = auth.uid();
+select public.set_my_notification_prefs('{"newListings": false, "orders": true, "ratings": true}');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 insert into public.listings (title, category, price, availability, notice_days) values ('עוגת גבינה', 'cakes', 90, 'preorder', 2);
 reset role;

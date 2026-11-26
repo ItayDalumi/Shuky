@@ -8,7 +8,7 @@ create or replace function pg_temp.as_user(u text) returns void language sql as 
 
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'איתי', '972501111111');
+select public.create_my_profile('איתי', '972501111111');
 -- ---------- 6. location must be inside the community ----------
 do $$ begin
   begin
@@ -32,15 +32,15 @@ do $$ begin
 end $$;
 select public.set_my_location(31.372, 34.816);
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'דנה', '972502222222');
+select public.create_my_profile('דנה', '972502222222');
 select public.set_my_location(31.375, 34.817);
 insert into public.listings (title, category, price, availability, baked_at) values ('עוגיות', 'cookies', 25, 'ready', current_date);
 insert into public.listings (title, category, price, availability, baked_at) values ('חלה', 'breads', 20, 'ready', current_date);
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'מיכל', '972503333333');
+select public.create_my_profile('מיכל', '972503333333');
 select public.set_my_location(31.373, 34.815);
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'רון', '972504444444');
+select public.create_my_profile('רון', '972504444444');
 select public.set_my_location(31.374, 34.814);
 
 -- ---------- 1. phone numbers ----------
