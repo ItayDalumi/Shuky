@@ -13,17 +13,32 @@ $$ select set_config('request.jwt.claim.sub', u, false) $$;
 -- ---------- profiles ----------
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'איתי', '972501111111');
+select public.create_my_profile('איתי', '972501111111');
 do $$ begin
   assert (select phone from public.get_my_profile()) = '972501111111', 'phone saved';
   raise notice 'PASS profile created with WhatsApp phone';
   begin
-    update public.profiles set phone = '12345' where id = auth.uid();
+    perform public.update_my_profile(null, '12345');
     raise exception 'FAIL bad phone accepted';
   exception when check_violation then raise notice 'PASS phone must be an Israeli mobile (9725XXXXXXXX)'; end;
-  update public.profiles set phone = '972501111112' where id = auth.uid();
+  perform public.update_my_profile(null, '972501111112');
   assert (select phone from public.get_my_profile()) = '972501111112', 'phone updated';
   raise notice 'PASS users can update their own phone';
+  begin
+    update public.profiles set name = 'ישיר' where id = auth.uid();
+    raise exception 'FAIL direct profile update allowed';
+  exception when insufficient_privilege then raise notice 'PASS profiles are written only through the RPCs'; end;
+  begin
+    perform public.set_my_notification_prefs('"oops"'::jsonb);
+    raise exception 'FAIL non-object prefs accepted';
+  exception when invalid_parameter_value then raise notice 'PASS notification prefs must be an object'; end;
+  begin
+    perform public.create_my_profile('א', '972501111112');
+    raise exception 'FAIL 1-letter name accepted';
+  exception when check_violation then raise notice 'PASS name must be 2-30 letters'; end;
+  perform public.create_my_profile('איתי', '972501111112');
+  assert (select count(*) from public.profiles where id = auth.uid()) = 1, 'retry is idempotent';
+  raise notice 'PASS creating the profile twice just updates it';
   begin
     update public.profiles set xp = 999 where id = auth.uid();
     raise exception 'FAIL xp writable';
@@ -33,14 +48,16 @@ do $$ begin
     raise exception 'FAIL could create profile for someone else';
   exception when insufficient_privilege then raise notice 'PASS cannot create someone else''s profile'; end;
 end $$;
-update public.profiles set name = 'איתי ד' where id = auth.uid();
+select public.update_my_profile('איתי ד');
 select public.set_my_location(31.37204, 34.81617);
 
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'דנה', '972502222222');
+select public.create_my_profile('דנה', '972502222222');
 select public.set_my_location(31.37500, 34.81700);
 do $$ begin
-  update public.profiles set name = 'hacked' where id = '00000000-0000-0000-0000-00000000000a';
+  begin
+    update public.profiles set name = 'hacked' where id = '00000000-0000-0000-0000-00000000000a';
+  exception when insufficient_privilege then null; end;
   assert (select name from public.profiles where id = '00000000-0000-0000-0000-00000000000a') = 'איתי ד', 'cannot rename others';
   raise notice 'PASS cannot rename another user';
   assert (select count(*) from public.profile_locations) = 1, 'sees only own location';

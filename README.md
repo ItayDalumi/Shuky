@@ -47,7 +47,7 @@ so new users enter one on the name screen (it isn't verified).
 1. Create a project at [supabase.com](https://supabase.com) (region: Frankfurt is closest to Israel).
 2. **SQL Editor** → run each file in `supabase/migrations/` **in order** (paste → **Run**):
    `20261121120000_init.sql`, `20261122090000_email_auth.sql`, `20261122140000_phase3.sql`,
-   `20261123090000_push.sql`, `20261124090000_security.sql`, then `20261125090000_compliance.sql`.
+   `20261123090000_push.sql`, `20261124090000_security.sql`, `20261125090000_compliance.sql`, then `20261126090000_profile_rpc.sql`.
    This creates the tables, the security rules (RLS), the feed / trade / rating / notification
    functions and the `listing-photos` bucket.
 3. **Email code** (free; the Email provider is on by default):

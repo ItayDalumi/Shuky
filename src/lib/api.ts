@@ -99,22 +99,26 @@ export async function fetchMyProfile(
 }
 
 export async function updateNotificationPrefs(userId: string, prefs: NotificationPrefs) {
-  const { error } = await requireSupabase().from('profiles').update({ notification_prefs: prefs }).eq('id', userId);
+  void userId; // the server only ever updates the signed-in user's own row
+  const { error } = await requireSupabase().rpc('set_my_notification_prefs', { p_prefs: prefs });
   if (error) throw error;
 }
 
 export async function createMyProfile(userId: string, name: string, phone: string) {
-  const { error } = await requireSupabase()
-    .from('profiles')
-    .insert({ id: userId, name, phone: toIntlDigitsIL(phone) });
+  void userId; // the server uses the signed-in user's id
+  const { error } = await requireSupabase().rpc('create_my_profile', {
+    p_name: name,
+    p_phone: toIntlDigitsIL(phone),
+  });
   if (error) throw error;
 }
 
 export async function updateMyProfile(userId: string, patch: { name?: string; phone?: string }) {
-  const row: { name?: string; phone?: string } = {};
-  if (patch.name) row.name = patch.name;
-  if (patch.phone) row.phone = toIntlDigitsIL(patch.phone);
-  const { error } = await requireSupabase().from('profiles').update(row).eq('id', userId);
+  void userId; // the server only ever updates the signed-in user's own row
+  const { error } = await requireSupabase().rpc('update_my_profile', {
+    p_name: patch.name || null,
+    p_phone: patch.phone ? toIntlDigitsIL(patch.phone) : null,
+  });
   if (error) throw error;
 }
 

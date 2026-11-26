@@ -9,10 +9,10 @@ create or replace function pg_temp.as_user(u text) returns void language sql as 
 
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'איתי', '972501111111');
+select public.create_my_profile('איתי', '972501111111');
 select public.set_my_location(31.372, 34.816);
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-insert into public.profiles (id, name, phone) values (auth.uid(), 'דנה', '972502222222');
+select public.create_my_profile('דנה', '972502222222');
 select public.set_my_location(31.375, 34.817);
 insert into storage.objects (bucket_id, name) values ('listing-photos', '00000000-0000-0000-0000-00000000000b/cake.jpg');
 insert into storage.objects (bucket_id, name) values ('listing-photos', '00000000-0000-0000-0000-00000000000b/draft.jpg');
