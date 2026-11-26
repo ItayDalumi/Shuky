@@ -34,7 +34,7 @@ import { useAppStore } from '@/store/AppStore';
 import { border, colors, radius, spacing } from '@/theme';
 
 const NOTIFICATION_ROWS: { key: keyof NotificationPrefs; icon: LucideIcon; label: string; hint: string }[] = [
-  { key: 'newListings', icon: CakeSlice, label: 'מאפים חדשים בשכונה', hint: 'כשאופה מהשכונה מעלה מוצר חדש' },
+  { key: 'newListings', icon: CakeSlice, label: 'מאפים חדשים בשכונה', hint: 'כשאופה מהשכונה מפרסם/ת מאפה חדש' },
   { key: 'orders', icon: Bell, label: 'הזמנות ועסקאות', hint: 'אישורי עסקה ותזכורות להזמנות מראש' },
   { key: 'ratings', icon: Star, label: 'דירוגים ורמות', hint: 'כשמדרגים אותך או כשעולים רמה' },
 ];
@@ -117,7 +117,7 @@ export default function SettingsScreen() {
   const onDeleteAccount = () =>
     confirmAction({
       title: 'למחוק את החשבון?',
-      message: 'כל המוצרים, הדירוגים והנקודות שלך יימחקו לצמיתות. אי אפשר לבטל את הפעולה.',
+      message: 'כל המאפים, הדירוגים והנקודות שלך יימחקו לצמיתות. אי אפשר לבטל את הפעולה.',
       confirmLabel: 'מחיקה',
       destructive: true,
       // Live: removes photos, then delete_my_account() deletes the user (data cascades).

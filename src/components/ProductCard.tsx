@@ -52,7 +52,7 @@ export function ProductCard({ listing, seller, isMine, onPress }: ProductCardPro
         <View style={styles.row}>
           {isMine ? (
             <AppText variant="caption" color={colors.crustDark} numberOfLines={1}>
-              המוצר שלך
+              המאפה שלך
             </AppText>
           ) : seller ? (
             <>

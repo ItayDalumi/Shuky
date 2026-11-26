@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowRight, CalendarClock, Clock, Flag, Handshake, Heart, PackageSearch } from 'lucide-react-native';
+import { ArrowRight, CalendarClock, Flag, Flame, Handshake, Heart, PackageSearch } from 'lucide-react-native';
 
 import {
   AppText,
@@ -57,7 +57,7 @@ export default function ProductScreen() {
         <View style={styles.missing}>
           <EmptyState
             icon={PackageSearch}
-            title="המוצר הזה כבר לא זמין"
+            title="המאפה הזה כבר לא זמין"
             message="אולי הוא נמכר, ואולי פשוט נאכל"
             action={<Button label="חזרה לבית" onPress={() => router.replace('/home')} />}
           />
@@ -120,7 +120,7 @@ export default function ProductScreen() {
     }
     confirmAction({
       title: `לחסום את ${seller.name}?`,
-      message: 'לא תראו יותר את המוצרים אחד של השני, ולא תוכלו ליצור קשר או לסגור עסקאות. אפשר לבטל בהגדרות.',
+      message: 'לא תראו יותר את המאפים אחד של השני, ולא תוכלו ליצור קשר או לסגור עסקאות. אפשר לבטל בהגדרות.',
       confirmLabel: 'חסימה',
       destructive: true,
       onConfirm: () =>
@@ -141,8 +141,8 @@ export default function ProductScreen() {
 
   const onDelete = () =>
     confirmAction({
-      title: 'למחוק את המוצר?',
-      message: 'המוצר יוסר מהשכונה. אי אפשר לבטל את הפעולה.',
+      title: 'למחוק את המאפה?',
+      message: 'המאפה יוסר מהשכונה. אי אפשר לבטל את הפעולה.',
       confirmLabel: 'מחיקה',
       destructive: true,
       onConfirm: () =>
@@ -191,8 +191,8 @@ export default function ProductScreen() {
             <Pill label={category.label} tone={category.tone} />
             <Pill
               label={availabilityLabel(listing)}
-              icon={preorder ? CalendarClock : Clock}
-              tone={preorder ? 'honey' : 'sage'}
+              icon={preorder ? CalendarClock : Flame}
+              tone={preorder ? 'honey' : 'crust'}
             />
           </View>
 
@@ -217,9 +217,12 @@ export default function ProductScreen() {
           ) : null}
 
           {preorder ? (
-            <AppText variant="small" color={colors.muted}>
-              {`נאפה במיוחד בשבילך. צריך להזמין ${noticeLabel(listing.noticeDays ?? 1)}.`}
-            </AppText>
+            <View style={styles.preorderNote}>
+              <CalendarClock size={18} color={colors.honeyDark} strokeWidth={2} />
+              <AppText variant="small" color={colors.honeyDark} style={styles.flexText}>
+                {`נאפה במיוחד בשבילך. צריך להזמין ${noticeLabel(listing.noticeDays ?? 1)}.`}
+              </AppText>
+            </View>
           ) : null}
 
           <SellerCard seller={seller} isMine={isMine} />
@@ -240,8 +243,8 @@ export default function ProductScreen() {
         {isMine ? (
           <>
             <View style={styles.mineNote}>
-              <AppText variant="small" color={colors.sageDark} center>
-                זה המוצר שלך. שכנים שמתעניינים יפנו אליך בוואטסאפ.
+              <AppText variant="small" color={colors.crustDark} center>
+                זה המאפה שלך. שכנים שמתעניינים יפנו אליך בוואטסאפ.
               </AppText>
             </View>
             <View style={styles.actions}>
@@ -288,7 +291,7 @@ export default function ProductScreen() {
         visible={actionsOpen}
         title="מה תרצו לעשות?"
         options={[
-          { key: 'report' as const, label: 'דיווח על המוצר' },
+          { key: 'report' as const, label: 'דיווח על המאפה' },
           { key: 'block' as const, label: `חסימת ${seller.name}` },
         ]}
         onSelect={onAction}
@@ -299,7 +302,7 @@ export default function ProductScreen() {
         title="למה לדווח?"
         options={[
           { key: 'unsafe_food' as const, label: 'מזון לא בטוח או מקולקל' },
-          { key: 'fake' as const, label: 'מוצר מזויף או מטעה' },
+          { key: 'fake' as const, label: 'תיאור מזויף או מטעה' },
           { key: 'inappropriate' as const, label: 'תוכן לא הולם' },
           { key: 'spam' as const, label: 'ספאם או פרסומת' },
           { key: 'harassment' as const, label: 'הטרדה' },
@@ -316,8 +319,22 @@ export default function ProductScreen() {
 const styles = StyleSheet.create({
   scroll: { paddingBottom: spacing.md },
   missing: { flex: 1, justifyContent: 'center' },
-  imageWrap: { height: 290 },
+  imageWrap: {
+    height: 300,
+    borderBottomStartRadius: 32,
+    borderBottomEndRadius: 32,
+    overflow: 'hidden',
+  },
   image: { flex: 1 },
+  preorderNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    padding: spacing.sm,
+    backgroundColor: colors.honeyLight,
+    borderRadius: radius.lg,
+  },
+  flexText: { flex: 1 },
   overlayButton: { position: 'absolute', top: spacing.sm },
   overlayStart: { start: spacing.screen },
   overlayEnd: { end: spacing.screen },
@@ -335,6 +352,8 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.md,
     paddingHorizontal: spacing.screen,
     backgroundColor: colors.cream,
+    borderTopWidth: border.hairline,
+    borderTopColor: colors.line,
   },
   dietary: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   dietaryPill: { borderWidth: border.hairline, borderColor: colors.line },
@@ -352,9 +371,7 @@ const styles = StyleSheet.create({
   },
   mineNote: {
     padding: spacing.md,
-    backgroundColor: colors.sageLight,
+    backgroundColor: colors.dough,
     borderRadius: radius.lg,
-    borderWidth: border.hairline,
-    borderColor: colors.sageLight,
   },
 });

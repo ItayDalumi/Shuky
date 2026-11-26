@@ -1,21 +1,21 @@
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { CakeSlice, Cookie, Croissant, Dessert, type LucideIcon } from 'lucide-react-native';
 
-import { AppText, Button, Screen } from '@/components';
+import { AppText, BakeryArt, Button, Screen } from '@/components';
+import type { Category } from '@/data/types';
 import { colors, spacing } from '@/theme';
 
-type HeroItem = { Icon: LucideIcon; color: string; background: string };
+type HeroItem = { category: Category; background: string };
 
-// Each row is listed right to left (RTL). Matches the Figma hero.
+// Each row is listed right to left (RTL).
 const HERO_ROWS: HeroItem[][] = [
   [
-    { Icon: Croissant, color: colors.honeyDark, background: colors.white },
-    { Icon: CakeSlice, color: colors.cherryDark, background: colors.cherryLight },
+    { category: 'cakes', background: colors.white },
+    { category: 'pastries', background: colors.white },
   ],
   [
-    { Icon: Dessert, color: colors.sageDark, background: colors.sageLight },
-    { Icon: Cookie, color: colors.honeyDark, background: colors.white },
+    { category: 'cookies', background: colors.white },
+    { category: 'breads', background: colors.white },
   ],
 ];
 
@@ -29,9 +29,9 @@ export default function WelcomeScreen() {
         <View style={styles.hero} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
           {HERO_ROWS.map((row, r) => (
             <View key={r} style={styles.heroRow}>
-              {row.map(({ Icon, color, background }, i) => (
-                <View key={i} style={[styles.heroCircle, { backgroundColor: background }]}>
-                  <Icon size={46} color={color} strokeWidth={1.5} />
+              {row.map(({ category, background }) => (
+                <View key={category} style={[styles.heroCircle, { backgroundColor: background }]}>
+                  <BakeryArt category={category} size={92} background={background} />
                 </View>
               ))}
             </View>
@@ -42,6 +42,9 @@ export default function WelcomeScreen() {
 
         <AppText variant="logo" color={colors.cherry} accessibilityRole="header" center>
           Shuky
+        </AppText>
+        <AppText variant="heading" color={colors.crust} center style={styles.hebrewName}>
+          שוקי
         </AppText>
         <AppText variant="tagline" center>
           מה שנאפה בשכונה שלך
@@ -81,13 +84,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 14,
-    backgroundColor: colors.honeyLight,
+    backgroundColor: colors.dough,
   },
+  hebrewName: { marginTop: -spacing.md },
   heroRow: { flexDirection: 'row', gap: 14 },
   heroCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -218,7 +218,7 @@ export const initialNotifications: AppNotification[] = [
   {
     id: 'n2',
     kind: 'newListing',
-    title: 'דנה העלתה מוצר חדש',
+    title: 'דנה פרסמה מאפה חדש',
     body: 'לחם מחמצת כפרי, נאפה הבוקר. 350 מ׳ ממך.',
     createdAt: minutesAgo(75),
     read: false,

@@ -17,6 +17,8 @@ import { Camera, X } from 'lucide-react-native';
 import {
   AppText,
   Button,
+  BakeryArt,
+  CategoryChip,
   Chip,
   IconButton,
   Input,
@@ -139,7 +141,7 @@ export default function NewListingScreen() {
         >
           <View style={styles.header}>
             <AppText variant="heading" accessibilityRole="header">
-              {editing ? 'עריכת מוצר' : 'מוצר חדש'}
+              {editing ? 'עריכת מאפה' : 'מאפה חדש'}
             </AppText>
             <IconButton icon={X} accessibilityLabel="סגירה" onPress={() => goBack(router, '/home')} />
           </View>
@@ -163,7 +165,10 @@ export default function NewListingScreen() {
             ) : (
               <>
                 <View style={styles.cameraCircle}>
-                  <Camera size={26} color={colors.cherry} strokeWidth={1.75} />
+                  <BakeryArt category={category} size={64} background={colors.white} />
+                  <View style={styles.cameraBadge}>
+                    <Camera size={16} color={colors.white} strokeWidth={2} />
+                  </View>
                 </View>
                 <AppText variant="cardTitle" center>
                   הוסיפו תמונה אמיתית
@@ -179,8 +184,9 @@ export default function NewListingScreen() {
             <AppText variant="label">קטגוריה</AppText>
             <View style={styles.chips}>
               {CATEGORY_ORDER.map((key) => (
-                <Chip
+                <CategoryChip
                   key={key}
+                  category={key}
                   label={CATEGORIES[key].label}
                   selected={category === key}
                   onPress={() => setCategory(key)}
@@ -190,7 +196,7 @@ export default function NewListingScreen() {
           </View>
 
           <Input
-            label="שם המוצר"
+            label="שם המאפה"
             placeholder="למשל: עוגת גבינה פירורים"
             value={title}
             onChangeText={setTitle}
@@ -274,7 +280,7 @@ export default function NewListingScreen() {
           </View>
 
           <Input
-            label="כמה מילים על המוצר (לא חובה)"
+            label="כמה מילים על המאפה (לא חובה)"
             placeholder="מה יש בפנים, איך שומרים, מתי אפשר לאסוף..."
             value={description}
             onChangeText={setDescription}
@@ -290,7 +296,7 @@ export default function NewListingScreen() {
             </AppText>
           ) : null}
           <Button
-            label={editing ? 'שמירת השינויים' : 'פרסום המוצר'}
+            label={editing ? 'שמירת השינויים' : 'פרסום המאפה'}
             onPress={publish}
             disabled={!canPublish}
             loading={publishing}
@@ -340,25 +346,38 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   photo: {
-    height: 150,
+    height: 170,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     overflow: 'hidden',
-    backgroundColor: colors.white,
+    backgroundColor: colors.dough,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: colors.line,
+    borderColor: colors.crust,
     borderRadius: radius.xl,
   },
   cameraCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.cherryLight,
+    backgroundColor: colors.white,
     marginBottom: 2,
+  },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: 0,
+    end: 0,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.cherry,
+    borderWidth: 2,
+    borderColor: colors.white,
   },
   photoBadge: {
     position: 'absolute',

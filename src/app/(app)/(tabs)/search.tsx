@@ -26,7 +26,7 @@ export default function SearchScreen() {
         <CategoryChips value={category} onChange={setCategory} />
 
         <AppText variant="small" color={colors.muted}>
-          {results.length === 1 ? 'מוצר אחד' : `${results.length} מוצרים`}
+          {results.length === 1 ? 'מאפה אחד' : `${results.length} מאפים`}
         </AppText>
 
         {results.length > 0 ? (

@@ -59,7 +59,7 @@ export function BottomNav({ active, onTabPress, onAddPress, bottomInset = 0 }: B
       {START_TABS.map(renderTab)}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="הוספת מוצר"
+        accessibilityLabel="פרסום מאפה"
         onPress={onAddPress}
         style={({ pressed }) => [styles.addWrap, pressed ? { opacity: 0.85, transform: [{ scale: 0.96 }] } : null]}
       >

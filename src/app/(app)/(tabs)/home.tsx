@@ -64,7 +64,7 @@ export default function HomeScreen() {
         </View>
 
         {mode === 'demo' ? (
-          <Pill tone="honey" label="מצב הדגמה · המוכרים, המוצרים והדירוגים כאן לדוגמה בלבד" />
+          <Pill tone="honey" label="מצב הדגמה · האופים, המאפים והדירוגים כאן לדוגמה בלבד" />
         ) : null}
 
         {feed.length > 0 ? (
@@ -122,9 +122,10 @@ export default function HomeScreen() {
         ) : feed.length === 0 ? (
           <EmptyState
             icon={CakeSlice}
+            art="cakes"
             title="עוד אין מאפים בשכונה"
             message="אופים משהו בבית? תהיו הראשונים לפרסם"
-            action={<Button label="הוספת מוצר" onPress={() => router.push('/listing/new')} />}
+            action={<Button label="פרסום מאפה" onPress={() => router.push('/listing/new')} />}
           />
         ) : (
           <EmptyState

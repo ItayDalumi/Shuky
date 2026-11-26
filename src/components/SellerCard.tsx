@@ -5,33 +5,40 @@ import type { Seller } from '@/data/types';
 import { formatDistance, formatRating } from '@/lib/format';
 import { border, colors, radius, spacing } from '@/theme';
 import { AppText } from './AppText';
+import { Pill } from './Pill';
 
-/** Seller summary on the product page: avatar, name, level, rating, rounded distance. */
+/** "האופה" card on the product page: avatar, name, level, rating, trades and rounded distance. */
 export function SellerCard({ seller, isMine }: { seller: Seller; isMine?: boolean }) {
   return (
     <View style={styles.card}>
       <View style={styles.avatar}>
-        <AppText variant="heading" color={colors.cherry}>
+        <AppText variant="title" color={colors.crustDark}>
           {seller.name.charAt(0)}
         </AppText>
       </View>
 
       <View style={styles.info}>
-        <AppText variant="bodyMedium" numberOfLines={1}>
-          {isMine ? `${seller.name} (את/ה)` : seller.name}
+        <AppText variant="caption" color={colors.muted}>
+          {isMine ? 'האופה (את/ה)' : 'האופה'}
         </AppText>
+        <View style={styles.nameRow}>
+          <AppText variant="bodyMedium" numberOfLines={1} style={styles.shrink}>
+            {seller.name}
+          </AppText>
+          <Pill size="sm" tone="honey" label={`רמה ${seller.level}`} />
+        </View>
         <View style={styles.ratingRow}>
-          <Star size={14} color={colors.honey} fill={colors.honey} />
+          {seller.rating !== null ? <Star size={13} color={colors.honey} fill={colors.honey} /> : null}
           <AppText variant="caption" color={colors.muted} numberOfLines={1}>
-            {`רמה ${seller.level} · ${seller.trades} עסקאות · ${formatRating(seller.rating)}`}
+            {`${formatRating(seller.rating)} · ${seller.trades} עסקאות`}
           </AppText>
         </View>
       </View>
 
       {!isMine && seller.distanceMeters !== null ? (
         <View style={styles.distance} accessibilityLabel={`בערך ${formatDistance(seller.distanceMeters)} ממך`}>
-          <MapPin size={18} color={colors.sage} strokeWidth={2} />
-          <AppText variant="caption" color={colors.muted}>
+          <MapPin size={18} color={colors.crust} strokeWidth={2} />
+          <AppText variant="captionMedium" color={colors.crustDark}>
             {formatDistance(seller.distanceMeters)}
           </AppText>
         </View>
@@ -45,22 +52,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
+    padding: 14,
     backgroundColor: colors.white,
     borderWidth: border.hairline,
     borderColor: colors.line,
     borderRadius: radius.xl,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.cherryLight,
+    backgroundColor: colors.crustLight,
   },
-  info: { flex: 1, alignItems: 'flex-start', gap: 4 },
+  info: { flex: 1, alignItems: 'flex-start', gap: 2 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  shrink: { flexShrink: 1 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  distance: { alignItems: 'center', gap: 2 },
+  distance: {
+    alignItems: 'center',
+    gap: 2,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: colors.crustLight,
+    borderRadius: radius.md,
+  },
 });

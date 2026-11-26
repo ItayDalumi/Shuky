@@ -14,7 +14,7 @@ const TIPS = [
   'אלרגיה או רגישות? שאלו את האופה על כל הרכיבים לפני ההזמנה. התגיות הן הצהרה של המוכר.',
   'שמרו מאפים עם קרם או גבינה במקרר, ובדקו מתי נאפו.',
   'מספיק לאסוף בפתח הבית. אין צורך להיכנס פנימה או לשתף פרטים אישיים מעבר לנדרש.',
-  'משהו נראה לא תקין, מטריד או מסוכן? דווחו מעמוד המוצר, או חסמו את המשתמש.',
+  'משהו נראה לא תקין, מטריד או מסוכן? דווחו מעמוד המאפה, או חסמו את המשתמש.',
 ];
 
 /** בטיחות ועזרה: hotlines and practical safety tips. Reachable from Settings and after a report. */
@@ -94,6 +94,6 @@ const styles = StyleSheet.create({
   },
   texts: { flex: 1, alignItems: 'flex-start', gap: 2 },
   tip: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.sage, marginTop: 9 },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.crust, marginTop: 9 },
   tipText: { flex: 1 },
 });

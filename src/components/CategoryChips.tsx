@@ -1,9 +1,45 @@
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CATEGORIES, CATEGORY_FILTERS, type CategoryFilter } from '@/data/categories';
+import type { Category } from '@/data/types';
 import { border, colors, radius, spacing } from '@/theme';
 import { AppText } from './AppText';
 import { BakeryArt } from './BakeryArt';
+
+export type CategoryChipProps = {
+  /** Omit for a text-only chip (e.g. "הכל") */
+  category?: Category;
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+};
+
+/** A pill with a small illustration of the category. */
+export function CategoryChip({ category, label, selected, onPress }: CategoryChipProps) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.chip,
+        !category ? styles.plain : null,
+        selected ? styles.selected : null,
+        pressed ? { opacity: 0.85 } : null,
+      ]}
+    >
+      {category ? (
+        <View style={[styles.art, { backgroundColor: CATEGORIES[category].background }]}>
+          <BakeryArt category={category} size={26} background={CATEGORIES[category].background} />
+        </View>
+      ) : null}
+      <AppText variant="label" color={selected ? colors.white : colors.ink}>
+        {label}
+      </AppText>
+    </Pressable>
+  );
+}
 
 /** Horizontally scrolling category filter with a small illustration per category. */
 export function CategoryChips({ value, onChange }: { value: CategoryFilter; onChange: (v: CategoryFilter) => void }) {
@@ -14,33 +50,15 @@ export function CategoryChips({ value, onChange }: { value: CategoryFilter; onCh
       contentContainerStyle={styles.row}
       style={styles.scroll}
     >
-      {CATEGORY_FILTERS.map((c) => {
-        const selected = value === c.key;
-        return (
-          <Pressable
-            key={c.key}
-            accessibilityRole="button"
-            accessibilityState={{ selected }}
-            accessibilityLabel={c.label}
-            onPress={() => onChange(c.key)}
-            style={({ pressed }) => [
-              styles.chip,
-              c.key === 'all' ? styles.plain : null,
-              selected ? styles.selected : null,
-              pressed ? { opacity: 0.85 } : null,
-            ]}
-          >
-            {c.key !== 'all' ? (
-              <View style={[styles.art, { backgroundColor: CATEGORIES[c.key].background }]}>
-                <BakeryArt category={c.key} size={26} background={CATEGORIES[c.key].background} />
-              </View>
-            ) : null}
-            <AppText variant="label" color={selected ? colors.white : colors.ink}>
-              {c.label}
-            </AppText>
-          </Pressable>
-        );
-      })}
+      {CATEGORY_FILTERS.map((c) => (
+        <CategoryChip
+          key={c.key}
+          category={c.key === 'all' ? undefined : c.key}
+          label={c.label}
+          selected={value === c.key}
+          onPress={() => onChange(c.key)}
+        />
+      ))}
     </ScrollView>
   );
 }

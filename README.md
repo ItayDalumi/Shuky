@@ -141,7 +141,7 @@ The database tests in `supabase/tests` check the security rules against a local 
 ```
 src/
   app/                      Expo Router routes (every file is a screen)
-    _layout.tsx             Root: fonts (Rubik), RTL, providers, stack
+    _layout.tsx             Root: fonts (Rubik, Fredoka), RTL, providers, stack
     index.tsx               Start: resumes the session, or goes to /welcome
     (onboarding)/           01 welcome · 02 email · 03 otp · name (new users) · 04 location
     (app)/                  Signed-in area (its _layout redirects to /welcome when signed out)
@@ -187,17 +187,24 @@ docs/                       Screenshots
 
 ### Design system
 
-Logo: a layered cake slice with a cherry on top, cream and honey on tomato. Source:
+Logo: a layered cake slice with a cherry on top, cream and honey on cherry red. Source:
 `docs/brand/logo.svg`; app icons in `assets/` (iOS icon, Android adaptive foreground / background /
 monochrome, splash, favicon). An alternative (a house made of cake) is in `docs/brand/`.
 
-Tokens live in `src/theme/tokens.ts` and mirror the Figma file: tomato (primary), leaf (freshness,
-location, success), honey (baked goods, XP), cream background (never pure white), white cards,
-1px `line` borders, radius 16–20, pill chips, no heavy shadows. Font: Rubik (400/500/600/700).
+Direction: a neighborhood bakery on a Friday morning. Tokens live in `src/theme/tokens.ts`:
+cherry (brand / primary, the logo's red), crust (golden-brown: "fresh from the oven", bakers,
+location), honey (XP, levels, ratings), sage (success only: completed trades, WhatsApp), cream
+background (never pure white), dough (banners, placeholders), cocoa `ink` text, white cards,
+1px `line` borders, radius 16–20, pill chips, no heavy shadows. Fonts: Fredoka for headings,
+prices and the logo (rounded, supports Hebrew); Rubik (400/500/600/700) for reading text.
 
-Components (`src/components`): `Button` (primary / secondary / leaf), `Chip`, `Input` (text or
+`BakeryArt` draws a flat illustration per category (cake slice with a cherry, cookies, croissant,
+challah, cupcake). It's the placeholder when a listing has no photo, and appears on category chips,
+the welcome screen and empty states.
+
+Components (`src/components`): `Button` (primary / secondary / sage), `Chip`, `Input` (text or
 select trigger), `ProductCard`, `BottomNav`, plus `AppText`, `IconButton`, `Pill`, `ProgressBar`,
-`SegmentedControl`, `OtpInput`, `SellerCard`, `SearchField`, `CategoryChips`, `CategoryArt`,
+`SegmentedControl`, `OtpInput`, `SellerCard`, `SearchField`, `CategoryChips`, `CategoryChip`, `CategoryArt`, `BakeryArt`,
 `ProductGrid`, `SelectSheet`, `SectionHeader`, `EmptyState`, `StepHeader`, `Screen`, `WhatsAppIcon`.
 
 Icons are [Lucide](https://lucide.dev) (`lucide-react-native`), the same line style as the Figma icons.

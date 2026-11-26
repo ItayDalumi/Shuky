@@ -45,8 +45,9 @@ export default function TradesScreen() {
         {trades.length === 0 ? (
           <EmptyState
             icon={Handshake}
+            art="pastries"
             title="עוד אין עסקאות"
-            message="קניתם משהו? בעמוד המוצר לחצו ״קניתי את זה״, והמוכר/ת יאשר/תאשר."
+            message="קניתם משהו? בעמוד המאפה לחצו ״קניתי את זה״, והמוכר/ת יאשר/תאשר."
           />
         ) : (
           <>

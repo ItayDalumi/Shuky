@@ -39,7 +39,7 @@ export default function BlockedScreen() {
           </AppText>
         ) : null}
         {blockedUsers.length === 0 ? (
-          <EmptyState icon={UserX} title="לא חסמת אף אחד" message="אפשר לחסום משתמש מעמוד של מוצר שלו" />
+          <EmptyState icon={UserX} title="לא חסמת אף אחד" message="אפשר לחסום משתמש מעמוד של מאפה שלו" />
         ) : (
           blockedUsers.map((b) => (
             <View key={b.id} style={styles.row}>
