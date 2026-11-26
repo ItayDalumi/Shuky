@@ -43,7 +43,7 @@ export function configureNotifications() {
     Notifications.setNotificationChannelAsync('default', {
       name: 'שוקי',
       importance: AndroidImportance.HIGH,
-      lightColor: colors.tomato,
+      lightColor: colors.cherry,
     }).catch(() => {});
   }
 }

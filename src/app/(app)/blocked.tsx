@@ -34,7 +34,7 @@ export default function BlockedScreen() {
       <ScrollView contentContainerStyle={styles.body}>
         <ScreenHeader title="משתמשים חסומים" fallback="/settings" />
         {error ? (
-          <AppText variant="small" color={colors.tomatoDark}>
+          <AppText variant="small" color={colors.cherryDark}>
             {error}
           </AppText>
         ) : null}

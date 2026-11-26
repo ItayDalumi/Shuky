@@ -4,29 +4,37 @@
  */
 
 export const colors = {
-  /** Primary: buttons, logo, active states */
-  tomato: '#E85D3F',
-  tomatoDark: '#B8432A',
-  tomatoLight: '#FDE5DE',
+  /** Brand (the logo's cherry red): primary buttons, logo, active states */
+  cherry: '#E05A3E',
+  cherryDark: '#AE3E27',
+  cherryLight: '#FCE3DA',
 
-  /** Freshness, location, success */
-  leaf: '#4A9B5E',
-  leafDark: '#2F6B3E',
-  leafLight: '#E1F1E5',
+  /** Fresh from the oven: "ready now", location, bakers. Golden crust brown. */
+  crust: '#B8692A',
+  crustDark: '#7E4416',
+  crustLight: '#F7E4CC',
 
-  /** Baked goods, XP / levels */
-  honey: '#F4B942',
+  /** XP, levels, ratings */
+  honey: '#F2B33D',
   honeyDark: '#8A5A00',
-  honeyLight: '#FCE7B8',
+  honeyLight: '#FCEBC2',
 
-  /** App background. Never use pure white for backgrounds. */
+  /** Success: completed trades, saved changes, WhatsApp-adjacent actions */
+  sage: '#4F8A5B',
+  sageDark: '#2F6140',
+  sageLight: '#E2EFE2',
+
+  /** App background: warm flour. Never use pure white for backgrounds. */
   cream: '#FFF8EE',
+  /** A deeper dough tone for banners and image placeholders */
+  dough: '#F8EAD6',
   /** Cards and inputs only */
   white: '#FFFFFF',
 
-  ink: '#2C2C2A',
-  muted: '#7A766E',
-  line: '#EDE3D3',
+  /** Text: dark cocoa instead of grey-black */
+  ink: '#3A2A22',
+  muted: '#86766A',
+  line: '#EEDFCB',
 } as const;
 
 export type ColorName = keyof typeof colors;
@@ -57,12 +65,17 @@ export const border = {
   input: 1.5,
 } as const;
 
-/** Rubik font family names, as registered by @expo-google-fonts/rubik. */
+/**
+ * Rubik for reading text; Fredoka (rounded, warm, supports Hebrew) for headings,
+ * prices and the logo, so screens feel like a neighborhood bakery.
+ */
 export const fonts = {
   regular: 'Rubik_400Regular',
   medium: 'Rubik_500Medium',
   semibold: 'Rubik_600SemiBold',
   bold: 'Rubik_700Bold',
+  display: 'Fredoka_600SemiBold',
+  displayBold: 'Fredoka_700Bold',
 } as const;
 
 export type FontWeightName = keyof typeof fonts;
@@ -70,12 +83,13 @@ export type FontWeightName = keyof typeof fonts;
 /** Type scale taken from the Figma frames. */
 export const typography = {
   // Always pair big sizes with a lineHeight: iOS clips glyphs that are taller than the line.
-  logo: { fontFamily: fonts.bold, fontSize: 56, lineHeight: 68 },
-  display: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 39 },
-  title: { fontFamily: fonts.bold, fontSize: 26, lineHeight: 36 },
-  heading: { fontFamily: fonts.bold, fontSize: 20, lineHeight: 26 },
-  tagline: { fontFamily: fonts.medium, fontSize: 22, lineHeight: 31 },
-  section: { fontFamily: fonts.bold, fontSize: 18, lineHeight: 23 },
+  logo: { fontFamily: fonts.displayBold, fontSize: 56, lineHeight: 70 },
+  display: { fontFamily: fonts.display, fontSize: 28, lineHeight: 38 },
+  title: { fontFamily: fonts.display, fontSize: 26, lineHeight: 35 },
+  heading: { fontFamily: fonts.display, fontSize: 21, lineHeight: 28 },
+  tagline: { fontFamily: fonts.display, fontSize: 22, lineHeight: 31 },
+  section: { fontFamily: fonts.display, fontSize: 19, lineHeight: 25 },
+  price: { fontFamily: fonts.display, fontSize: 17, lineHeight: 22 },
   button: { fontFamily: fonts.medium, fontSize: 17 },
   body: { fontFamily: fonts.regular, fontSize: 16, lineHeight: 22 },
   bodyMedium: { fontFamily: fonts.medium, fontSize: 16, lineHeight: 22 },

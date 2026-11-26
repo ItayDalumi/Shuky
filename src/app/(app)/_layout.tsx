@@ -13,7 +13,7 @@ export default function AppLayout() {
   if (authStatus === 'loading') {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.tomato} />
+        <ActivityIndicator color={colors.cherry} />
       </View>
     );
   }

@@ -11,10 +11,10 @@ type HeroItem = { Icon: LucideIcon; color: string; background: string };
 const HERO_ROWS: HeroItem[][] = [
   [
     { Icon: Croissant, color: colors.honeyDark, background: colors.white },
-    { Icon: CakeSlice, color: colors.tomatoDark, background: colors.tomatoLight },
+    { Icon: CakeSlice, color: colors.cherryDark, background: colors.cherryLight },
   ],
   [
-    { Icon: Dessert, color: colors.leafDark, background: colors.leafLight },
+    { Icon: Dessert, color: colors.sageDark, background: colors.sageLight },
     { Icon: Cookie, color: colors.honeyDark, background: colors.white },
   ],
 ];
@@ -40,7 +40,7 @@ export default function WelcomeScreen() {
 
         <View style={styles.gap} />
 
-        <AppText variant="logo" color={colors.tomato} accessibilityRole="header" center>
+        <AppText variant="logo" color={colors.cherry} accessibilityRole="header" center>
           Shuky
         </AppText>
         <AppText variant="tagline" center>

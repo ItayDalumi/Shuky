@@ -62,9 +62,9 @@ export default function LocationScreen() {
           <AppText variant="body" color={colors.muted} center>
             כדי להראות לך מה יש בסביבה. השכנים יראו רק מרחק משוער – אף פעם לא את הכתובת שלך.
           </AppText>
-          <Pill label="המיקום שלך מוגן" icon={Lock} tone="leaf" style={styles.pill} />
+          <Pill label="המיקום שלך מוגן" icon={Lock} tone="sage" style={styles.pill} />
           {note ? (
-            <AppText variant="small" color={colors.tomatoDark} center>
+            <AppText variant="small" color={colors.cherryDark} center>
               {note}
             </AppText>
           ) : null}
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     borderRadius: 105,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.leafLight,
+    backgroundColor: colors.sageLight,
     marginBottom: spacing.sm,
   },
   innerCircle: {
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     borderRadius: 65,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.leaf,
+    backgroundColor: colors.sage,
   },
   texts: { gap: spacing.md },
   pill: { alignSelf: 'center' },

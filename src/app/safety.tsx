@@ -25,7 +25,7 @@ export default function SafetyScreen() {
         <ScreenHeader title="בטיחות ועזרה" fallback="/" />
 
         <View style={styles.urgent}>
-          <AppText variant="bodyMedium" color={colors.tomatoDark}>
+          <AppText variant="bodyMedium" color={colors.cherryDark}>
             מרגישים במצוקה, או שמישהו בסכנה? אפשר לפנות עכשיו:
           </AppText>
           {HOTLINES.map((h) => (
@@ -45,7 +45,7 @@ export default function SafetyScreen() {
                   {h.hint}
                 </AppText>
               </View>
-              <AppText variant="heading" color={colors.tomato}>
+              <AppText variant="heading" color={colors.cherry}>
                 {h.number}
               </AppText>
             </Pressable>
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
   urgent: {
     gap: spacing.sm,
     padding: spacing.md,
-    backgroundColor: colors.tomatoLight,
+    backgroundColor: colors.cherryLight,
     borderRadius: radius.xl,
   },
   hotline: {
@@ -90,10 +90,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.tomato,
+    backgroundColor: colors.cherry,
   },
   texts: { flex: 1, alignItems: 'flex-start', gap: 2 },
   tip: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.leaf, marginTop: 9 },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.sage, marginTop: 9 },
   tipText: { flex: 1 },
 });

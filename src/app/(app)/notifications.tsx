@@ -10,9 +10,9 @@ import { useAppStore } from '@/store/AppStore';
 import { border, colors, radius, spacing } from '@/theme';
 
 const KIND_STYLE: Record<NotificationKind, { Icon: LucideIcon; color: string; background: string }> = {
-  tradeConfirm: { Icon: Handshake, color: colors.leafDark, background: colors.leafLight },
-  tradeCompleted: { Icon: CircleCheck, color: colors.leafDark, background: colors.leafLight },
-  newListing: { Icon: CakeSlice, color: colors.tomatoDark, background: colors.tomatoLight },
+  tradeConfirm: { Icon: Handshake, color: colors.sageDark, background: colors.sageLight },
+  tradeCompleted: { Icon: CircleCheck, color: colors.sageDark, background: colors.sageLight },
+  newListing: { Icon: CakeSlice, color: colors.cherryDark, background: colors.cherryLight },
   rating: { Icon: Star, color: colors.honeyDark, background: colors.honeyLight },
   preorder: { Icon: CalendarClock, color: colors.honeyDark, background: colors.honeyLight },
   level: { Icon: Trophy, color: colors.honeyDark, background: colors.honeyLight },
@@ -40,7 +40,7 @@ export default function NotificationsScreen() {
           action={
             unreadCount > 0 ? (
               <Pressable accessibilityRole="button" onPress={markAllNotificationsRead} hitSlop={8}>
-                <AppText variant="label" color={colors.tomato}>
+                <AppText variant="label" color={colors.cherry}>
                   סימון הכל כנקרא
                 </AppText>
               </Pressable>
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
     borderColor: colors.line,
     borderRadius: radius.xl,
   },
-  itemUnread: { borderColor: colors.tomatoLight, backgroundColor: colors.white },
+  itemUnread: { borderColor: colors.cherryLight, backgroundColor: colors.white },
   icon: {
     width: 40,
     height: 40,
@@ -118,5 +118,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   texts: { flex: 1, alignItems: 'flex-start', gap: 3 },
-  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.tomato, marginTop: 6 },
+  dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: colors.cherry, marginTop: 6 },
 });

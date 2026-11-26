@@ -36,7 +36,7 @@ export default function TradesScreen() {
     <Screen>
       <ScrollView
         contentContainerStyle={styles.body}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={refreshTrades} tintColor={colors.tomato} />}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={refreshTrades} tintColor={colors.cherry} />}
       >
         <ScreenHeader title="העסקאות שלי" fallback="/profile" />
         <AppText variant="small" color={colors.muted}>

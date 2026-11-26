@@ -163,7 +163,7 @@ export default function NewListingScreen() {
             ) : (
               <>
                 <View style={styles.cameraCircle}>
-                  <Camera size={26} color={colors.tomato} strokeWidth={1.75} />
+                  <Camera size={26} color={colors.cherry} strokeWidth={1.75} />
                 </View>
                 <AppText variant="cardTitle" center>
                   הוסיפו תמונה אמיתית
@@ -285,7 +285,7 @@ export default function NewListingScreen() {
           <View style={styles.spacer} />
 
           {error ? (
-            <AppText variant="small" color={colors.tomatoDark} center>
+            <AppText variant="small" color={colors.cherryDark} center>
               {error}
             </AppText>
           ) : null}
@@ -318,7 +318,7 @@ export default function NewListingScreen() {
         <InputAccessoryView nativeID={NUMERIC_DONE_ID}>
           <View style={styles.accessory}>
             <Pressable accessibilityRole="button" onPress={Keyboard.dismiss} hitSlop={8}>
-              <AppText variant="bodyMedium" color={colors.tomato}>
+              <AppText variant="bodyMedium" color={colors.cherry}>
                 סיום
               </AppText>
             </Pressable>
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.tomatoLight,
+    backgroundColor: colors.cherryLight,
     marginBottom: 2,
   },
   photoBadge: {

@@ -66,7 +66,7 @@ export default function EmailScreen() {
             containerStyle={styles.input}
           />
           {error ? (
-            <AppText variant="small" color={colors.tomatoDark}>
+            <AppText variant="small" color={colors.cherryDark}>
               {error}
             </AppText>
           ) : null}
@@ -79,7 +79,7 @@ export default function EmailScreen() {
             {'בלחיצה על המשך את/ה מאשר/ת את '}
             <AppText
               variant="caption"
-              color={colors.tomato}
+              color={colors.cherry}
               accessibilityRole="link"
               onPress={() => router.push('/legal/terms')}
               style={styles.link}
@@ -89,7 +89,7 @@ export default function EmailScreen() {
             {' ואת '}
             <AppText
               variant="caption"
-              color={colors.tomato}
+              color={colors.cherry}
               accessibilityRole="link"
               onPress={() => router.push('/legal/privacy')}
               style={styles.link}

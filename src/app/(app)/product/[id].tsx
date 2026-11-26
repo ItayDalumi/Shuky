@@ -159,7 +159,7 @@ export default function ProductScreen() {
           <CategoryArt
             category={listing.category}
             photoUri={listing.photoUri}
-            iconSize={132}
+            artSize={210}
             style={styles.image}
           />
           <IconButton
@@ -171,7 +171,7 @@ export default function ProductScreen() {
           <IconButton
             icon={Heart}
             accessibilityLabel={saved ? 'הסרה מהשמורים' : 'שמירה'}
-            color={saved ? colors.tomato : colors.ink}
+            color={saved ? colors.cherry : colors.ink}
             filled={saved}
             onPress={() => toggleSaved(listing.id)}
             style={[styles.overlayButton, styles.overlayEnd]}
@@ -192,14 +192,14 @@ export default function ProductScreen() {
             <Pill
               label={availabilityLabel(listing)}
               icon={preorder ? CalendarClock : Clock}
-              tone={preorder ? 'honey' : 'leaf'}
+              tone={preorder ? 'honey' : 'sage'}
             />
           </View>
 
           <AppText variant="title" accessibilityRole="header">
             {listing.title}
           </AppText>
-          <AppText variant="heading" color={colors.tomato}>
+          <AppText variant="heading" color={colors.cherry}>
             {formatPriceLine(listing)}
           </AppText>
           {listing.description ? (
@@ -228,19 +228,19 @@ export default function ProductScreen() {
 
       <View style={styles.footer}>
         {error ? (
-          <AppText variant="small" color={colors.tomatoDark} center>
+          <AppText variant="small" color={colors.cherryDark} center>
             {error}
           </AppText>
         ) : null}
         {note ? (
-          <AppText variant="small" color={colors.leafDark} center>
+          <AppText variant="small" color={colors.sageDark} center>
             {note}
           </AppText>
         ) : null}
         {isMine ? (
           <>
             <View style={styles.mineNote}>
-              <AppText variant="small" color={colors.leafDark} center>
+              <AppText variant="small" color={colors.sageDark} center>
                 זה המוצר שלך. שכנים שמתעניינים יפנו אליך בוואטסאפ.
               </AppText>
             </View>
@@ -258,7 +258,7 @@ export default function ProductScreen() {
           <>
             <Button
               label={preorder ? 'הזמנה מראש בוואטסאפ' : 'הזמנה בוואטסאפ'}
-              variant="leaf"
+              variant="sage"
               icon={<WhatsAppIcon size={22} />}
               onPress={order}
               accessibilityLabel={`הזמנה מ${seller.name} בוואטסאפ`}
@@ -352,9 +352,9 @@ const styles = StyleSheet.create({
   },
   mineNote: {
     padding: spacing.md,
-    backgroundColor: colors.leafLight,
+    backgroundColor: colors.sageLight,
     borderRadius: radius.lg,
     borderWidth: border.hairline,
-    borderColor: colors.leafLight,
+    borderColor: colors.sageLight,
   },
 });

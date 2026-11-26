@@ -11,15 +11,15 @@ export type CategoryConfig = {
   /** Soft background behind the illustration */
   background: string;
   /** Tag color on the product page */
-  tone: 'tomato' | 'leaf' | 'honey';
+  tone: 'cherry' | 'crust' | 'sage' | 'honey';
 };
 
 export const CATEGORIES: Record<Category, CategoryConfig> = {
-  cakes: { label: 'עוגות', Icon: CakeSlice, color: colors.tomatoDark, background: colors.tomatoLight, tone: 'tomato' },
+  cakes: { label: 'עוגות', Icon: CakeSlice, color: colors.cherryDark, background: colors.cherryLight, tone: 'cherry' },
   cookies: { label: 'עוגיות', Icon: Cookie, color: colors.honeyDark, background: colors.honeyLight, tone: 'honey' },
-  pastries: { label: 'מאפים', Icon: Croissant, color: colors.honeyDark, background: colors.cream, tone: 'honey' },
-  breads: { label: 'לחם וחלות', Icon: Wheat, color: colors.honeyDark, background: colors.honeyLight, tone: 'honey' },
-  desserts: { label: 'קינוחים', Icon: Dessert, color: colors.leafDark, background: colors.leafLight, tone: 'leaf' },
+  pastries: { label: 'מאפים', Icon: Croissant, color: colors.crustDark, background: colors.crustLight, tone: 'crust' },
+  breads: { label: 'לחם וחלות', Icon: Wheat, color: colors.crustDark, background: colors.dough, tone: 'crust' },
+  desserts: { label: 'קינוחים', Icon: Dessert, color: colors.sageDark, background: colors.sageLight, tone: 'sage' },
 };
 
 /** Display order (right to left in the UI) */

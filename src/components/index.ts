@@ -1,5 +1,6 @@
 export * from './AppText';
 export * from './BottomNav';
+export * from './BakeryArt';
 export * from './Button';
 export * from './Captcha';
 export * from './CategoryChips';

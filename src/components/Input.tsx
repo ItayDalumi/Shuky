@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   fieldMultiline: { height: undefined, minHeight: 100, alignItems: 'stretch', paddingVertical: spacing.sm },
-  fieldFocused: { borderColor: colors.tomato },
+  fieldFocused: { borderColor: colors.cherry },
   fieldDisabled: { backgroundColor: colors.cream },
   input: {
     flex: 1,

@@ -11,7 +11,7 @@ export function SellerCard({ seller, isMine }: { seller: Seller; isMine?: boolea
   return (
     <View style={styles.card}>
       <View style={styles.avatar}>
-        <AppText variant="heading" color={colors.tomato}>
+        <AppText variant="heading" color={colors.cherry}>
           {seller.name.charAt(0)}
         </AppText>
       </View>
@@ -30,7 +30,7 @@ export function SellerCard({ seller, isMine }: { seller: Seller; isMine?: boolea
 
       {!isMine && seller.distanceMeters !== null ? (
         <View style={styles.distance} accessibilityLabel={`בערך ${formatDistance(seller.distanceMeters)} ממך`}>
-          <MapPin size={18} color={colors.leaf} strokeWidth={2} />
+          <MapPin size={18} color={colors.sage} strokeWidth={2} />
           <AppText variant="caption" color={colors.muted}>
             {formatDistance(seller.distanceMeters)}
           </AppText>
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.tomatoLight,
+    backgroundColor: colors.cherryLight,
   },
   info: { flex: 1, alignItems: 'flex-start', gap: 4 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },

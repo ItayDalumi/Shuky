@@ -16,7 +16,7 @@ export function EmptyState({ icon: Icon, title, message, action }: EmptyStatePro
   return (
     <View style={styles.container}>
       <View style={styles.circle}>
-        <Icon size={36} color={colors.tomato} strokeWidth={1.75} />
+        <Icon size={36} color={colors.cherry} strokeWidth={1.75} />
       </View>
       <AppText variant="section" center>
         {title}
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
     borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.tomatoLight,
+    backgroundColor: colors.cherryLight,
     marginBottom: spacing.xs,
   },
   action: { alignSelf: 'stretch', marginTop: spacing.sm },

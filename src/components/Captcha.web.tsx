@@ -67,7 +67,7 @@ export function Captcha({ onToken }: CaptchaProps) {
     <View style={styles.box} accessibilityLabel="בדיקת אבטחה">
       <View nativeID="shuky-captcha" style={styles.widget} />
       {failed ? (
-        <AppText variant="caption" color={colors.tomatoDark} center>
+        <AppText variant="caption" color={colors.cherryDark} center>
           לא הצלחנו לטעון את בדיקת האבטחה. בדקו את החיבור ונסו שוב.
         </AppText>
       ) : null}

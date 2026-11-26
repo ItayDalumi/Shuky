@@ -84,7 +84,7 @@ export default function OtpScreen() {
           </View>
 
           {error ? (
-            <AppText variant="small" color={colors.tomatoDark} center>
+            <AppText variant="small" color={colors.cherryDark} center>
               {error}
             </AppText>
           ) : null}
@@ -95,7 +95,7 @@ export default function OtpScreen() {
             </AppText>
           ) : (
             <Pressable accessibilityRole="button" onPress={resend} hitSlop={8} style={styles.resend}>
-              <AppText variant="label" color={colors.tomato} center>
+              <AppText variant="label" color={colors.cherry} center>
                 לא קיבלת? שלחו לי קוד חדש
               </AppText>
             </Pressable>
