@@ -1,25 +1,26 @@
-import { ScrollView, StyleSheet } from 'react-native';
+import { useMemo } from 'react';
 import { router } from 'expo-router';
 import { Heart } from 'lucide-react-native';
 
-import { AppText, Button, EmptyState, ProductGrid, Screen } from '@/components';
+import { AppText, Button, EmptyState, FeedList, Screen, type FeedSection } from '@/components';
 import { useAppStore } from '@/store/AppStore';
-import { spacing } from '@/theme';
 
 /** שמורים. Phase 3 persists saved items per user. */
 export default function SavedScreen() {
   const { savedListings } = useAppStore();
 
+  const sections = useMemo<FeedSection[]>(() => [{ key: 'saved', listings: savedListings }], [savedListings]);
+
   return (
     <Screen edges={['top']}>
-      <ScrollView contentContainerStyle={styles.body}>
-        <AppText variant="heading" accessibilityRole="header">
-          שמורים
-        </AppText>
-
-        {savedListings.length > 0 ? (
-          <ProductGrid listings={savedListings} />
-        ) : (
+      <FeedList
+        header={
+          <AppText variant="heading" accessibilityRole="header">
+            שמורים
+          </AppText>
+        }
+        sections={sections}
+        empty={
           <EmptyState
             icon={Heart}
             art="cookies"
@@ -27,17 +28,8 @@ export default function SavedScreen() {
             message="לחצו על הלב בעמוד של מאפה כדי לשמור אותו כאן"
             action={<Button label="לגלות מה יש בשכונה" onPress={() => router.navigate('/home')} />}
           />
-        )}
-      </ScrollView>
+        }
+      />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  body: {
-    gap: spacing.md,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
-    paddingHorizontal: spacing.screen,
-  },
-});

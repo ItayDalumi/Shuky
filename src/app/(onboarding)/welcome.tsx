@@ -40,10 +40,10 @@ export default function WelcomeScreen() {
 
         <View style={styles.gap} />
 
-        <AppText variant="logo" color={colors.cherry} accessibilityRole="header" center>
+        <AppText variant="logo" color={colors.brand} accessibilityRole="header" center>
           Shuky
         </AppText>
-        <AppText variant="heading" color={colors.crust} center style={styles.hebrewName}>
+        <AppText variant="heading" color={colors.crustDark} center style={styles.hebrewName}>
           שוקי
         </AppText>
         <AppText variant="tagline" center>

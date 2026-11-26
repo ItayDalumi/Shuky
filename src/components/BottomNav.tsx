@@ -56,32 +56,48 @@ export function BottomNav({ active, onTabPress, onAddPress, bottomInset = 0 }: B
 
   return (
     <View style={[styles.bar, { paddingBottom: Math.max(bottomInset, 26) }]}>
-      {START_TABS.map(renderTab)}
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="פרסום מאפה"
-        onPress={onAddPress}
-        style={({ pressed }) => [styles.addWrap, pressed ? { opacity: 0.85, transform: [{ scale: 0.96 }] } : null]}
-      >
-        <View style={styles.add}>
-          <Plus size={26} color={colors.white} strokeWidth={2.5} />
-        </View>
-      </Pressable>
-      {END_TABS.map(renderTab)}
+      <View accessibilityRole="tablist" style={styles.tabs}>
+        {START_TABS.map(renderTab)}
+        <View style={styles.addSpace} />
+        {END_TABS.map(renderTab)}
+      </View>
+      {/* The + button floats over the middle of the bar, outside the tab list (it isn't a tab). */}
+      <View style={styles.addLayer} pointerEvents="box-none">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="פרסום מאפה"
+          onPress={onAddPress}
+          style={({ pressed }) => [styles.addWrap, pressed ? { opacity: 0.85, transform: [{ scale: 0.96 }] } : null]}
+        >
+          <View style={styles.add}>
+            <Plus size={26} color={colors.white} strokeWidth={2.5} />
+          </View>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   bar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     paddingTop: 10,
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.white,
     borderTopWidth: border.hairline,
     borderTopColor: colors.line,
+  },
+  tabs: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  addSpace: { width: 68 },
+  addLayer: {
+    position: 'absolute',
+    top: 10,
+    start: 0,
+    end: 0,
+    alignItems: 'center',
   },
   tab: {
     width: 58,
@@ -97,7 +113,7 @@ const styles = StyleSheet.create({
   },
   iconActive: { backgroundColor: colors.cherryLight },
   addWrap: {
-    marginTop: -26,
+    marginTop: -31,
     padding: 5,
     borderRadius: 34,
     backgroundColor: colors.white,

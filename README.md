@@ -16,7 +16,7 @@ Lehavim. The app is mobile-first (iOS / Android), and the whole UI is Hebrew, ri
 
 ## Running it
 
-Requirements: Node 20+ and npm.
+Requirements: Node 22.13+ and npm.
 
 ```bash
 npm install
@@ -30,7 +30,20 @@ npm start            # Expo dev server for iOS / Android (Expo Go or a dev build
 | `npm start` | Dev server (press `i` / `a` for simulators) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | `expo lint` (ESLint, `eslint-config-expo`) |
+| `npm test` | App tests (Jest + `jest-expo` + React Native Testing Library) |
+| `npm run test:db` | Database tests against a local Postgres + PostGIS (see `supabase/tests/run.sh`) |
 | `npm run build:web` | Static web export to `dist/` |
+
+### Tests and CI
+
+- **App tests** live next to the code in `__tests__/` folders (`src/lib`, `src/components`,
+  `src/store`): formatting and validation, levels, search, phone numbers, EXIF stripping, error
+  messages, request timeouts, the main components, the virtualized feed, and the demo store
+  (posting, saving, the two-sided trade confirmation, blocking).
+- **Database tests** (`supabase/tests/*_test.sql`) run every migration on a throwaway database and
+  check the security rules: RLS, rate limits, phone privacy, XP rules, reports, blocks, push.
+- **GitHub Actions** (`.github/workflows/ci.yml`) runs typecheck, lint, app tests and database tests
+  on every push and pull request. A red ✗ on a PR means something broke; don't merge it.
 
 ### Demo mode vs live mode
 
@@ -79,7 +92,7 @@ In demo mode the phone shows a local notification when a demo trade completes.
 ## Security
 
 Enforced in the database (RLS, column grants, `SECURITY DEFINER` functions), not just in the app.
-`supabase/tests` holds 78 checks; run them with `supabase/tests/run.sh`.
+`supabase/tests` holds 92 checks; run them with `npm run test:db` (CI runs them on every push).
 
 - **Privacy:** locations are rounded on the phone, snapped to ~100 m and never readable by others;
   the feed shows a rounded distance only. Phone numbers can't be read in bulk: the WhatsApp number

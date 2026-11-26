@@ -558,7 +558,8 @@ function friendlyMessage(error: unknown): string {
   if (/rate limit|too many|security purposes/i.test(message)) return 'יותר מדי ניסיונות. חכו כמה דקות ונסו שוב.';
   if (/invalid.*email|email.*invalid|unable to validate email/i.test(message)) return 'כתובת המייל לא תקינה.';
   if (/captcha/i.test(message)) return 'בדיקת האבטחה נכשלה. נסו שוב.';
-  if (/network|fetch/i.test(message)) return 'אין חיבור לאינטרנט. בדקו את החיבור ונסו שוב.';
+  if (/timed out|timeout/i.test(message)) return 'השרת לא עונה כרגע. בדקו את החיבור ונסו שוב.';
+  if (/network|fetch|load failed/i.test(message)) return 'אין חיבור לאינטרנט. בדקו את החיבור ונסו שוב.';
   if (/payload too large|exceeded the maximum allowed size/i.test(message)) return 'התמונה גדולה מדי. נסו תמונה אחרת.';
   return 'משהו השתבש. נסו שוב בעוד רגע.';
 }

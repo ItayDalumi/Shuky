@@ -22,6 +22,7 @@ export function CategoryChip({ category, label, selected, onPress }: CategoryChi
       accessibilityState={{ selected }}
       accessibilityLabel={label}
       onPress={onPress}
+      hitSlop={{ top: 4, bottom: 4 }}
       style={({ pressed }) => [
         styles.chip,
         !category ? styles.plain : null,
