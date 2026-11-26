@@ -1,12 +1,13 @@
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Redirect } from 'expo-router';
 
+import { OfflineScreen } from '@/components';
 import { useAppStore } from '@/store/AppStore';
 import { colors } from '@/theme';
 
 /** Entry point: demo mode always starts at onboarding; live mode resumes the saved session. */
 export default function Index() {
-  const { mode, authStatus } = useAppStore();
+  const { mode, authStatus, retryConnection } = useAppStore();
 
   if (mode === 'demo') return <Redirect href="/welcome" />;
   if (authStatus === 'loading') {
@@ -16,6 +17,7 @@ export default function Index() {
       </View>
     );
   }
+  if (authStatus === 'offline') return <OfflineScreen onRetry={retryConnection} />;
   if (authStatus === 'ready') return <Redirect href="/home" />;
   if (authStatus === 'needsProfile') return <Redirect href="/name" />;
   return <Redirect href="/welcome" />;

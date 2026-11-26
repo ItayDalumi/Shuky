@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { router } from 'expo-router';
-import { Bell, CakeSlice, MapPin, Search } from 'lucide-react-native';
+import { Bell, CakeSlice, MapPin, RefreshCw, Search, WifiOff } from 'lucide-react-native';
 
 import {
   AppText,
@@ -87,14 +87,30 @@ export default function HomeScreen() {
 
         <CategoryChips value={category} onChange={setCategory} />
 
-        {feedError ? (
-          <AppText variant="small" color={colors.cherryDark} center>
-            {feedError}
-          </AppText>
+        {feedError && feed.length > 0 ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${feedError} לחצו כדי לנסות שוב`}
+            onPress={refreshAll}
+            style={styles.errorBar}
+          >
+            <WifiOff size={18} color={colors.cherryDark} strokeWidth={2} />
+            <AppText variant="small" color={colors.cherryDark} style={styles.errorText} numberOfLines={2}>
+              {feedError.split('\n')[0]}
+            </AppText>
+            <RefreshCw size={18} color={colors.cherryDark} strokeWidth={2} />
+          </Pressable>
         ) : null}
 
         {feedLoading && feed.length === 0 ? (
           <ActivityIndicator color={colors.cherry} style={styles.loading} />
+        ) : feedError && feed.length === 0 ? (
+          <EmptyState
+            icon={WifiOff}
+            title="לא הצלחנו לטעון את הפיד"
+            message={feedError}
+            action={<Button label="נסו שוב" variant="secondary" onPress={refreshAll} />}
+          />
         ) : listings.length > 0 && filtering ? (
           <>
             <SectionHeader title={listings.length === 1 ? 'מאפה אחד' : `${listings.length} מאפים`} />
@@ -128,11 +144,7 @@ export default function HomeScreen() {
             action={<Button label="פרסום מאפה" onPress={() => router.push('/listing/new')} />}
           />
         ) : (
-          <EmptyState
-            icon={Search}
-            title="לא מצאנו משהו כזה בשכונה"
-            message="נסו מילה אחרת או קטגוריה אחרת"
-          />
+          <EmptyState icon={Search} title="לא מצאנו משהו כזה בשכונה" message="נסו מילה אחרת או קטגוריה אחרת" />
         )}
       </ScrollView>
     </Screen>
@@ -175,5 +187,15 @@ const styles = StyleSheet.create({
   bannerText: { flex: 1, gap: 2, alignItems: 'flex-start' },
   bannerArt: { marginVertical: -spacing.xs },
   sectionGap: { height: spacing.xs },
+  errorBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.cherryLight,
+    borderRadius: radius.lg,
+  },
+  errorText: { flex: 1 },
   sectionNote: { marginTop: -spacing.sm },
 });

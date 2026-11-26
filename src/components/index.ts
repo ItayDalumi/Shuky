@@ -25,3 +25,4 @@ export * from './StarRating';
 export * from './StepHeader';
 export * from './TradeRow';
 export * from './WhatsAppIcon';
+export * from './ProblemScreen';

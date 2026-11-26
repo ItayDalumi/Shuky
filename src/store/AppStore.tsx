@@ -13,6 +13,7 @@ import {
   useState,
   type PropsWithChildren,
 } from 'react';
+import { AppState } from 'react-native';
 
 import {
   currentUser as demoUser,
@@ -33,12 +34,14 @@ import type {
 } from '@/data/types';
 import * as api from '@/lib/api';
 import { getLevelInfo, XP_PER_TRADE } from '@/lib/levels';
+import { isNetworkError } from '@/lib/net';
 import { getRegisteredToken, setRegisteredToken, showLocalNotification } from '@/lib/push';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export type Mode = 'live' | 'demo';
 /** loading -> signedOut | needsProfile (signed in, no name yet) | ready */
-export type AuthStatus = 'loading' | 'signedOut' | 'needsProfile' | 'ready';
+/** 'offline': a saved session exists but the server couldn't be reached at launch. */
+export type AuthStatus = 'loading' | 'signedOut' | 'needsProfile' | 'ready' | 'offline';
 
 export type NewListingInput = api.CreateListingInput & {
   /** Local preview URI (used directly in demo mode) */
@@ -51,6 +54,8 @@ type AppStore = {
   user: CurrentUser;
 
   // Auth & profile
+  /** After 'offline': try to reach the server again */
+  retryConnection: () => void;
   /** Emails a one-time code (captchaToken when Turnstile is enabled) */
   sendOtp: (email: string, captchaToken?: string) => Promise<void>;
   /** Returns what comes next: the name screen for new users, or the app. */
@@ -155,6 +160,8 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
   // Latest user / trades, for async callbacks (demo timers, reloads).
   const userRef = useRef(user);
   const tradesRef = useRef(trades);
+  /** The saved session we couldn't load at launch because the server was unreachable */
+  const offlineSessionRef = useRef<{ id: string; email: string } | null>(null);
   useEffect(() => {
     userRef.current = user;
     tradesRef.current = trades;
@@ -234,10 +241,35 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
         setAuthStatus('signedOut');
         return;
       }
-      loadProfile(session.id, session.email).catch(() => setAuthStatus('signedOut'));
+      loadProfile(session.id, session.email).catch((e) => {
+        // No connection is not the same as signed out: keep the session and offer a retry.
+        if (isNetworkError(e)) {
+          offlineSessionRef.current = session;
+          setAuthStatus('offline');
+        } else {
+          setAuthStatus('signedOut');
+        }
+      });
     },
     [loadProfile],
   );
+
+  const retryConnection = useCallback(() => {
+    const session = offlineSessionRef.current;
+    if (!session) return;
+    offlineSessionRef.current = null;
+    setAuthStatus('loading');
+    applySession(session);
+  }, [applySession]);
+
+  // Coming back to the app (e.g. after turning Wi-Fi on) retries automatically.
+  useEffect(() => {
+    if (authStatus !== 'offline') return;
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') retryConnection();
+    });
+    return () => sub.remove();
+  }, [authStatus, retryConnection]);
 
   // Live: restore the saved session on launch, and react when it ends (sign out, expiry).
   useEffect(() => {
@@ -612,6 +644,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       mode,
       authStatus,
       user,
+      retryConnection,
       sendOtp,
       verifyOtp,
       createProfile,
@@ -662,6 +695,7 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
     mode,
     authStatus,
     user,
+    retryConnection,
     sendOtp,
     verifyOtp,
     createProfile,

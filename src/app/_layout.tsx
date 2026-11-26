@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { LocaleProvider, Stack } from 'expo-router';
+import { LocaleProvider, Stack, type ErrorBoundaryProps } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,7 +13,7 @@ import {
 } from '@expo-google-fonts/rubik';
 import { Fredoka_600SemiBold, Fredoka_700Bold } from '@expo-google-fonts/fredoka';
 
-import { AppText } from '@/components';
+import { AppText, ProblemScreen } from '@/components';
 import { setupRTL, webDir } from '@/lib/rtl';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { AppStoreProvider } from '@/store/AppStore';
@@ -73,6 +73,26 @@ export default function RootLayout() {
         </AppStoreProvider>
       </SafeAreaProvider>
     </LocaleProvider>
+  );
+}
+
+/**
+ * Last-resort screen if a render crashes anywhere in the app (instead of a white screen).
+ * Expo Router picks this export up automatically.
+ */
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  return (
+    <SafeAreaProvider>
+      <View style={styles.outer} {...webDir('rtl')}>
+        <ProblemScreen
+          art="cakes"
+          title="אופס, משהו נשרף בתנור"
+          message="קרתה תקלה לא צפויה. אפשר לנסות שוב, ואם זה חוזר, לסגור ולפתוח את האפליקציה."
+          actionLabel="נסו שוב"
+          onAction={retry}
+        />
+      </View>
+    </SafeAreaProvider>
   );
 }
 
