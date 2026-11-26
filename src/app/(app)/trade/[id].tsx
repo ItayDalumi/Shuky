@@ -212,6 +212,7 @@ function Completed({ trade }: { trade: Trade }) {
               value={after.progress}
               from={before.level === after.level ? before.progress : 0}
               trackColor={colors.honeyLight}
+              accessibilityLabel={after.nextLevelXp ? `התקדמות לרמה ${after.level + 1}` : `רמה ${after.level}`}
             />
           </View>
 

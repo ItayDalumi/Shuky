@@ -40,7 +40,11 @@ export default function LevelsScreen() {
           <AppText variant="bodyMedium" color={colors.honeyDark}>
             {ltr(info.nextLevelXp ? `${info.xp} / ${info.nextLevelXp} XP` : `${info.xp} XP`)}
           </AppText>
-          <ProgressBar value={info.progress} style={styles.heroBar} />
+          <ProgressBar
+            value={info.progress}
+            style={styles.heroBar}
+            accessibilityLabel={info.nextLevelXp ? `התקדמות לרמה ${info.level + 1}` : `רמה ${info.level}, הרמה הגבוהה ביותר`}
+          />
           <AppText variant="small" color={colors.honeyDark} center>
             {info.nextLevelXp
               ? `עוד ${info.xpToNext} נקודות לרמה ${info.level + 1}, בערך ${Math.ceil(info.xpToNext / XP_PER_TRADE)} עסקאות`

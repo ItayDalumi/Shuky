@@ -79,6 +79,7 @@ export const Input = forwardRef<TextInputInstance, InputProps>(function Input(
           <TextInput
             ref={ref}
             placeholderTextColor={colors.muted}
+            accessibilityLabel={label}
             {...webDir(ltrValue ? 'ltr' : 'rtl')}
             {...rest}
             editable={editable}

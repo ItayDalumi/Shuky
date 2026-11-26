@@ -8,14 +8,14 @@ import { border, colors, fonts, radius, spacing } from '@/theme';
 /** "מה בא לך היום?" search bar */
 export const SearchField = forwardRef<TextInputInstance, TextInputProps>(function SearchField(props, ref) {
   return (
-    <View style={styles.field}>
+    <View style={styles.field} accessibilityRole="search">
       <Search size={20} color={colors.muted} strokeWidth={2} />
       <TextInput
         ref={ref}
         placeholder="מה בא לך היום?"
         placeholderTextColor={colors.muted}
         returnKeyType="search"
-        accessibilityRole="search"
+        accessibilityLabel="חיפוש מאפים"
         {...webDir('rtl')}
         {...props}
         style={[styles.input, props.style]}

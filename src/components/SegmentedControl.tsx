@@ -28,6 +28,7 @@ export function SegmentedControl<T extends string>({
             key={option.key}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
+            aria-checked={selected}
             onPress={() => onChange(option.key)}
             style={[styles.option, selected ? styles.optionSelected : null]}
           >

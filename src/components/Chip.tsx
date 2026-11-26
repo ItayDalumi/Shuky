@@ -16,6 +16,7 @@ export function Chip({ label, selected, onPress }: ChipProps) {
       accessibilityRole="button"
       accessibilityState={{ selected: !!selected }}
       onPress={onPress}
+      hitSlop={{ top: 6, bottom: 6 }}
       style={({ pressed }) => [
         styles.base,
         selected ? styles.selected : styles.default,

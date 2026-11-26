@@ -4,8 +4,11 @@
  */
 
 export const colors = {
-  /** Brand (the logo's cherry red): primary buttons, logo, active states */
-  cherry: '#E05A3E',
+  /** The logo's red. Large brand text and the app icon only (3.7:1 on white: too light for small text). */
+  brand: '#E05A3E',
+  /** Primary: buttons, links, prices, active states. A deeper cherry so white text on it and
+   *  cherry text on cream pass WCAG AA (4.5:1). */
+  cherry: '#C6462C',
   cherryDark: '#AE3E27',
   cherryLight: '#FCE3DA',
 
@@ -20,7 +23,7 @@ export const colors = {
   honeyLight: '#FCEBC2',
 
   /** Success: completed trades, saved changes, WhatsApp-adjacent actions */
-  sage: '#4F8A5B',
+  sage: '#457D53',
   sageDark: '#2F6140',
   sageLight: '#E2EFE2',
 
@@ -33,7 +36,7 @@ export const colors = {
 
   /** Text: dark cocoa instead of grey-black */
   ink: '#3A2A22',
-  muted: '#86766A',
+  muted: '#776759',
   line: '#EEDFCB',
 } as const;
 

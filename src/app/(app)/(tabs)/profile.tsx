@@ -71,7 +71,10 @@ export default function ProfileScreen() {
               </View>
             ) : null}
           </View>
-          <ProgressBar value={level.progress} />
+          <ProgressBar
+            value={level.progress}
+            accessibilityLabel={level.nextLevelXp ? `התקדמות לרמה ${level.level + 1}` : `רמה ${level.level}`}
+          />
           <View style={styles.levelFooter}>
             <AppText variant="caption" color={colors.honeyDark}>
               {level.nextLevelXp ? `עוד ${level.xpToNext} נקודות לרמה ${level.level + 1}` : 'הגעת לרמה הגבוהה ביותר!'}
