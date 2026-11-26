@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { CakeSlice, Cookie, Croissant, Dessert, type LucideIcon } from 'lucide-react-native';
 
 import { AppText, Button, Screen } from '@/components';
-import { colors, spacing, typography } from '@/theme';
+import { colors, spacing } from '@/theme';
 
 type HeroItem = { Icon: LucideIcon; color: string; background: string };
 
@@ -40,7 +40,7 @@ export default function WelcomeScreen() {
 
         <View style={styles.gap} />
 
-        <AppText accessibilityRole="header" style={styles.logo} center>
+        <AppText variant="logo" color={colors.tomato} accessibilityRole="header" center>
           Shuky
         </AppText>
         <AppText variant="tagline" center>
@@ -91,5 +91,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logo: { ...typography.logo, color: colors.tomato },
 });

@@ -69,7 +69,8 @@ export type FontWeightName = keyof typeof fonts;
 
 /** Type scale taken from the Figma frames. */
 export const typography = {
-  logo: { fontFamily: fonts.bold, fontSize: 56 },
+  // Always pair big sizes with a lineHeight: iOS clips glyphs that are taller than the line.
+  logo: { fontFamily: fonts.bold, fontSize: 56, lineHeight: 68 },
   display: { fontFamily: fonts.bold, fontSize: 28, lineHeight: 39 },
   title: { fontFamily: fonts.bold, fontSize: 26, lineHeight: 36 },
   heading: { fontFamily: fonts.bold, fontSize: 20, lineHeight: 26 },

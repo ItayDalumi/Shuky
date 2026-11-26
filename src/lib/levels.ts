@@ -5,11 +5,11 @@
 export const XP_PER_TRADE = 20;
 
 export const LEVELS = [
-  { level: 1, minXp: 0, title: 'בצק טרי' },
-  { level: 2, minXp: 100, title: 'תופח יפה' },
-  { level: 3, minXp: 250, title: 'יוצא מהתנור' },
-  { level: 4, minXp: 500, title: 'זהוב ופריך' },
-  { level: 5, minXp: 900, title: 'כוכב המאפייה' },
+  { level: 1, minXp: 0, title: 'בצק טרי', description: 'הצטרפת לשוקי. כל עסקה ראשונה מתחילה כאן.' },
+  { level: 2, minXp: 100, title: 'תופח יפה', description: 'השכנים מתחילים להכיר אותך ואת המאפים.' },
+  { level: 3, minXp: 250, title: 'יוצא מהתנור', description: 'שם מוכר בשכונה, עם עסקאות ודירוגים טובים.' },
+  { level: 4, minXp: 500, title: 'זהוב ופריך', description: 'מהשכנים הפעילים והאמינים ביותר בשוקי.' },
+  { level: 5, minXp: 900, title: 'כוכב המאפייה', description: 'הרמה הגבוהה ביותר. השכונה יודעת למי לפנות.' },
 ] as const;
 
 export type LevelInfo = {
