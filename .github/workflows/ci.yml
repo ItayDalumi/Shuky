@@ -28,6 +28,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test -- --ci
+      - name: Expo doctor (SDK-compatible package versions)
+        run: npx --yes expo-doctor@1
 
   database:
     name: Database (migrations + security tests)
