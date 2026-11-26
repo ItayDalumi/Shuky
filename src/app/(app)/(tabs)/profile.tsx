@@ -52,7 +52,12 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.levelCard}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`רמה ${level.level}, ${level.title}. לכל הרמות`}
+          onPress={() => router.push('/levels')}
+          style={({ pressed }) => [styles.levelCard, pressed ? { opacity: 0.9 } : null]}
+        >
           <View style={styles.levelRow}>
             <View style={styles.levelTitle}>
               <Trophy size={22} color={colors.honeyDark} strokeWidth={2} />
@@ -67,10 +72,18 @@ export default function ProfileScreen() {
             ) : null}
           </View>
           <ProgressBar value={level.progress} />
-          <AppText variant="caption" color={colors.honeyDark}>
-            {level.nextLevelXp ? `עוד ${level.xpToNext} נקודות לרמה ${level.level + 1}` : 'הגעת לרמה הגבוהה ביותר!'}
-          </AppText>
-        </View>
+          <View style={styles.levelFooter}>
+            <AppText variant="caption" color={colors.honeyDark}>
+              {level.nextLevelXp ? `עוד ${level.xpToNext} נקודות לרמה ${level.level + 1}` : 'הגעת לרמה הגבוהה ביותר!'}
+            </AppText>
+            <View style={styles.allLevels}>
+              <AppText variant="captionMedium" color={colors.honeyDark}>
+                לכל הרמות
+              </AppText>
+              <ChevronLeft size={16} color={colors.honeyDark} />
+            </View>
+          </View>
+        </Pressable>
 
         <View style={styles.stats}>
           {stats.map((s) => (
@@ -144,8 +157,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.tomatoLight,
   },
-  avatarLetter: { fontSize: 36 },
+  avatarLetter: { fontSize: 36, lineHeight: 44 },
   location: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  levelFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.xs },
+  allLevels: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   levelCard: {
     gap: spacing.sm,
     padding: spacing.lg,

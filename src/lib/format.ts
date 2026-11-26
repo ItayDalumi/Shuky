@@ -117,3 +117,15 @@ export function formatDistanceOrNearby(meters: number | null, fromMe = false): s
 export function isValidEmail(raw: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(raw.trim());
 }
+
+/** Quantity of units, as stored in listing.unit: 1 -> "יחידה אחת", 12 -> "12 יחידות" */
+export function formatQuantity(quantity: number): string {
+  return quantity === 1 ? 'יחידה אחת' : `${quantity} יחידות`;
+}
+
+/** Reads the quantity back from listing.unit ("12 יחידות", "קופסה של 12", "יחידה אחת"); '' if none. */
+export function parseQuantity(unit: string | undefined): string {
+  if (!unit) return '';
+  if (unit.includes('יחידה אחת')) return '1';
+  return unit.match(/\d+/)?.[0] ?? '';
+}

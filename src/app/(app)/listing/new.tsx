@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Image,
+  InputAccessoryView,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, X } from 'lucide-react-native';
@@ -18,10 +28,14 @@ import { CATEGORIES, CATEGORY_ORDER, DIETARY_LABELS, DIETARY_ORDER, NOTICE_OPTIO
 import type { Availability, Category, DietaryTag } from '@/data/types';
 import { errorMessage, type NewPhoto } from '@/lib/api';
 import { preparePhoto } from '@/lib/photo';
-import { AVAILABILITY_LABELS, daysAgo, noticeLabel, relativeDay } from '@/lib/format';
+import { AVAILABILITY_LABELS, daysAgo, formatQuantity, noticeLabel, parseQuantity, relativeDay } from '@/lib/format';
 import { goBack } from '@/lib/navigation';
 import { useAppStore } from '@/store/AppStore';
-import { colors, radius, spacing } from '@/theme';
+import { border, colors, radius, spacing } from '@/theme';
+
+/** iOS number pads have no return key: a "done" bar above the keyboard closes it. */
+const NUMERIC_DONE_ID = 'numeric-done';
+const numericDone = Platform.OS === 'ios' ? { inputAccessoryViewID: NUMERIC_DONE_ID } : {};
 
 const AVAILABILITY: Availability[] = ['ready', 'preorder'];
 const BAKED_OPTIONS = ['0', '1', '2'] as const;
@@ -47,7 +61,7 @@ export default function NewListingScreen() {
     editing?.bakedAt ? (`${Math.min(2, daysAgo(editing.bakedAt))}` as BakedKey) : '0',
   );
   const [noticeDays, setNoticeDays] = useState<NoticeKey>(editing?.noticeDays ? (`${editing.noticeDays}` as NoticeKey) : '2');
-  const [unit, setUnit] = useState(editing?.unit ?? '');
+  const [quantity, setQuantity] = useState(parseQuantity(editing?.unit));
   const [dietary, setDietary] = useState<DietaryTag[]>(editing?.dietary ?? ['kosher']);
   const [description, setDescription] = useState(editing?.description ?? '');
   const [sheet, setSheet] = useState<'baked' | 'notice' | null>(null);
@@ -92,7 +106,7 @@ export default function NewListingScreen() {
         title: title.trim(),
         category,
         price: priceNumber,
-        unit: unit.trim() || undefined,
+        unit: Number(quantity) > 0 ? formatQuantity(Number(quantity)) : undefined,
         description: description.trim(),
         availability,
         bakedAt: preorder ? undefined : bakedAt.toISOString(),
@@ -118,7 +132,11 @@ export default function NewListingScreen() {
   return (
     <Screen>
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={styles.body}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <View style={styles.header}>
             <AppText variant="heading" accessibilityRole="header">
               {editing ? 'עריכת מוצר' : 'מוצר חדש'}
@@ -197,6 +215,8 @@ export default function NewListingScreen() {
               value={price}
               onChangeText={(t) => setPrice(t.replace(/[^\d]/g, '').slice(0, 4))}
               keyboardType="number-pad"
+              inputMode="numeric"
+              {...numericDone}
               leading={
                 <AppText variant="bodyMedium" color={colors.muted}>
                   ₪
@@ -222,11 +242,21 @@ export default function NewListingScreen() {
           </View>
 
           <Input
-            label="כמות או גודל (לא חובה)"
-            placeholder="למשל: קופסה של 12, עוגה ל-10 סועדים"
-            value={unit}
-            onChangeText={setUnit}
-            maxLength={30}
+            label="כמות יחידות (לא חובה)"
+            placeholder="למשל: 12"
+            value={quantity}
+            onChangeText={(t) => setQuantity(t.replace(/[^\d]/g, '').replace(/^0+/, '').slice(0, 3))}
+            keyboardType="number-pad"
+            inputMode="numeric"
+            maxLength={3}
+            trailing={
+              quantity ? (
+                <AppText variant="body" color={colors.muted}>
+                  {quantity === '1' ? 'יחידה' : 'יחידות'}
+                </AppText>
+              ) : undefined
+            }
+            {...numericDone}
           />
 
           <View style={styles.field}>
@@ -284,6 +314,17 @@ export default function NewListingScreen() {
         onSelect={setNoticeDays}
         onClose={() => setSheet(null)}
       />
+      {Platform.OS === 'ios' ? (
+        <InputAccessoryView nativeID={NUMERIC_DONE_ID}>
+          <View style={styles.accessory}>
+            <Pressable accessibilityRole="button" onPress={Keyboard.dismiss} hitSlop={8}>
+              <AppText variant="bodyMedium" color={colors.tomato}>
+                סיום
+              </AppText>
+            </Pressable>
+          </View>
+        </InputAccessoryView>
+      ) : null}
     </Screen>
   );
 }
@@ -336,4 +377,13 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: spacing.sm },
   half: { flex: 1 },
   spacer: { flexGrow: 1, minHeight: spacing.xs },
+  accessory: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 10,
+    backgroundColor: colors.cream,
+    borderTopWidth: border.hairline,
+    borderTopColor: colors.line,
+  },
 });
